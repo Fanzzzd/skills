@@ -69,7 +69,7 @@ Every rule comes from a loop that went wrong in a real session: a judge scoring 
 
 ## Contributing
 
-Bug reports and ideas are welcome when they come from a real session. See [SCOPE.md](./SCOPE.md) for the bar, and [`.out-of-scope/`](./.out-of-scope/) for what's already been decided. Maintainer rules live in [CLAUDE.md](./CLAUDE.md).
+Bug reports and ideas are welcome when they come from a real session. See [SCOPE.md](./SCOPE.md) for the bar, and [`.out-of-scope/`](./.out-of-scope/) for what's already been decided. Maintainer rules live in [AGENTS.md](./AGENTS.md).
 
 ## License
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Enforces the invariants in CLAUDE.md. Run with `npm run check`; CI runs it
+// Enforces the invariants in AGENTS.md. Run with `npm run check`; CI runs it
 // on every push and pull request. Exits 1 and lists every violation.
 
 import { execFileSync } from "node:child_process";
