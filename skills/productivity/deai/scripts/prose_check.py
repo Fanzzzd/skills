@@ -166,13 +166,16 @@ def check(path, red, yellow, regex, abstract, defense, sd_check=True):
 # is counted once and not again as its inner character. Single characters that are
 # usually part of other words get context: 不仅 is not 仅, 合约 is not 约, 崇尚 is not 尚.
 NUM = "[为合莫近\\d一二两三四五六七八九十百千万几〇零数]"
-# 约 counts as a hedge by default and is excluded only where it is half of a word: a
-# preceding character that makes a noun or verb with it (签约、合约、续约、节约) or a
-# following one that makes 约 a verb (约定、约束、约请). Missing a real hedge lets
-# --baseline pass a loss; counting a stray word costs nothing, since it shows up on
-# both sides of the comparison. So the lists name words, never hedge forms.
-_YUE = ("(?<![合签违预节制公条契履缔简婚集邀特践誓赴解立守隐续租毁爽失订和协盟密撤退要相规修拟背践])约"
-        "(?![定束请会稿谈战见好束法])")
+# 约 counts as a hedge by default. It is excluded only where it is half of a word: a
+# following character that makes 约 a verb (约定、约束、约请), or a preceding one that
+# makes a noun or verb with it (签约、合约、节约), and the second case only when no
+# quantity follows, since 需要约3天 and 流失约30% are hedges after the same characters.
+# Missing a real hedge lets --baseline pass a loss; counting a stray word costs nothing,
+# since it shows up on both sides of the comparison. So the lists name words, never
+# hedge forms.
+_YUE_QTY = "(?=\\s*(?:[有占达在超计略摸半等相逾过共每满¥￥$＄≈~-]|" + NUM + "))"
+_YUE = ("(?:(?<![合签违预节制公条契履缔简婚集邀特践誓赴解立守隐续租毁爽失订和协盟密撤退要相规修拟背])约|约"
+        + _YUE_QTY + ")(?![定束请会稿谈战见好法])")
 HEDGES_ZH = {
     "可能": ["可能", "或许", "也许"],
     "条件": ["如果", "假如", "倘若", "如有", "若(?!干)"],
