@@ -77,7 +77,7 @@ $S/scripts/aigc FILE.md
 
 | 脚本 | 作用 |
 |---|---|
-| `prose_check.py FILE [--json] [--baseline ORIG] [--lexicon EXTRA.md] [--no-sd]` | 红色词、黄色词密度、句式正则、抽象名词、防御性声明、本文类自称、列表行和加粗、破折号、句长标准差、连续等长句、限定词基线比对、汉字数 |
+| `prose_check.py FILE [--json] [--baseline ORIG] [--lexicon EXTRA.md] [--no-sd]`（.md、.txt、.docx） | 红色词、黄色词密度、句式正则、抽象名词、防御性声明、本文类自称、列表行和加粗、破折号、句长标准差、连续等长句、限定词基线比对、汉字数 |
 | `aigc FILE [--lang auto\|zh\|en] [--json] [--all-paragraphs]` | 本地 MPU 检测器逐段打分，包装 `aigc_detect.py`。按语言自动选检测器，支持 .md、.txt、.docx |
 | `run_judges.sh TAG FILE OUTDIR [AIGC.txt\|auto] [SOURCES]` | 两个 judge 并行评审 |
 | `render_prompt.py TEMPLATE KEY=VALUE...` | 填模板占位符 |

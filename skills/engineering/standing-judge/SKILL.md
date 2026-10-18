@@ -20,7 +20,7 @@ Before round 1, write `.judge/gate.md` from [references/gate-file.md](references
 - **Budget and stop rules.** A hard cap in rounds or wall clock, and the plateau rule. The default plateau is two rounds in a row with the bar unmet, no dimension moving, and no new finding at or above the bar's severity; the performance kind defines its own.
 - **Ship path.** How far a fix travels without asking: commit only, or commit and push, or a release PR. Verified fixes ship on it as they land; the gate never holds a release hostage.
 
-Show the user the bar, owner items, budget and ship path in a few lines. Step 1 is done when the user confirms them, or has told you to proceed on your judgment. When the harness can't ask (a headless run), proceed with `Status: unconfirmed` in the gate file, and open every report with "gate unconfirmed" until the user confirms.
+Show the user the bar, owner items, budget and ship path in a few lines. Step 1 is done when the user confirms them, or has told you to proceed on your judgment. When the harness can't ask (a headless run), proceed with `Status: unconfirmed` in the gate file, and put "gate unconfirmed" right after the verdict in every report until the user confirms.
 
 Then freeze the bar, the rubric and the thresholds. A threshold that moves to let the work pass is no longer a gate. Change the gate file only when the user settles a new owner item or changes the bar, and say so in the next report.
 
@@ -48,8 +48,8 @@ After each round, walk the table from the top and take the first verdict whose c
 | Verdict | When | Next |
 |---|---|---|
 | **BUDGET** | The budget is spent. | Stop. Report the distance to the bar, and whether a panel was still pending. |
-| **PASS** | The bar holds on the current SHA, and this round was a panel on that SHA that found nothing at or above the bar's severity. | Stop. Report the final table and the follow-up list. |
-| **PANEL** | The bar holds on the current SHA, and no clean panel has judged it yet. | Run the panel next round (see below). |
+| **PASS** | The bar holds on the current SHA, and every panel lens has a clean result that holds on it (see below). | Stop. Report the final table and the follow-up list. |
+| **PANEL** | The bar holds on the current SHA, and some panel lens has no clean result that holds on it. | Run those lenses next round (see below). |
 | **OWNER** | The bar is unmet, and everything blocking it is an owner item. | Stop. List each item and what it would take. |
 | **PLATEAU** | The plateau rule fired. | Stop. Report the distance to the bar and what a different approach would need. |
 | **REWRITE** | One area regressed two or three rounds running, each fix opening the next hole. | Write the rule the area should follow in two or three sentences, rewrite the area to it, write the end-to-end test of the real scenario, then run the next round. |
@@ -61,7 +61,9 @@ When fixes oscillate (one rule's fix trips another), the rubric conflicts with i
 
 ### The panel
 
-One judge's 10 covers only the dimensions it was given. The panel is three to five judges in parallel on the same SHA, each with a lens the fixer did not pick (release and CI, accessibility, newcomer onboarding, security), on a different model where possible. Panel findings count against the bar at their own severity. When a panel finds something at or above it, fix it; the next round re-runs only the lenses that found something, on the new SHA, and lenses that came back clean are done. PASS needs every lens clean at least once since the bar first passed, the last of them on the current SHA.
+One judge's 10 covers only the dimensions it was given. The panel is three to five judges in parallel on the same SHA, each with a lens the fixer did not pick (release and CI, accessibility, newcomer onboarding, security), on a different model where possible. Panel findings count against the bar at their own severity.
+
+A lens is **clean** on a SHA when it found nothing at or above the bar's severity there. A clean result holds on a later SHA when the diff since touches nothing that lens reviewed; a fix to the area a lens reviewed voids its clean result. So after a panel finding is fixed, the next round runs the lens that found it plus every lens whose area the fix touched, and the rest stay clean. The first PANEL round runs every lens.
 
 ## Calibration
 

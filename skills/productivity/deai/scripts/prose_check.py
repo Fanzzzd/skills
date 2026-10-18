@@ -2,7 +2,7 @@
 """Rule-based AI-pattern scan for Chinese prose (Markdown or plain text).
 
 Usage:
-  python3 prose_check.py FILE [FILE...] [--json] [--baseline ORIGINAL] [--lexicon EXTRA.md] [--no-sd]
+  python3 prose_check.py FILE [FILE...]  (.md, .txt or .docx) [--json] [--baseline ORIGINAL] [--lexicon EXTRA.md] [--no-sd]
 
   --baseline ORIGINAL  比对改写前原稿的限定词（可能、如果、未必、仅等），任何一组变少即判不通过。
   --lexicon EXTRA.md   追加项目词表，格式同 references/blacklist.md（红：/黄：/正则：/抽象：/防御正则：）。
@@ -20,6 +20,10 @@ import re
 import statistics
 import sys
 from pathlib import Path
+
+sys.dont_write_bytecode = True  # keep the skill folder free of __pycache__
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from aigc_detect import read_input  # noqa: E402  (.md/.txt as-is, .docx body text; no torch import)
 
 HERE = Path(__file__).resolve().parent
 BLACKLIST = HERE.parent / "references" / "blacklist.md"
@@ -96,7 +100,7 @@ def ctx(p, w, start=None):
 
 
 def check(path, red, yellow, regex, abstract, defense, sd_check=True):
-    text = Path(path).read_text(encoding="utf-8")
+    text = read_input(path)
     paras = paragraphs(text)
     body = "\n".join(paras)
     k = max(han(body) / 1000, 0.001)
@@ -191,13 +195,13 @@ def hedge_counts(text):
 
 
 def compare_baseline(r, baseline):
-    cur = hedge_counts(Path(r["file"]).read_text(encoding="utf-8"))
-    base = hedge_counts(Path(baseline).read_text(encoding="utf-8"))
+    cur = hedge_counts(read_input(r["file"]))
+    base = hedge_counts(read_input(baseline))
     keys = sorted(set(cur) | set(base), key=lambda x: (x.startswith("en:"), x))
     r["hedges"] = {h: (base.get(h, 0), cur.get(h, 0)) for h in keys}
     r["hedge_drops"] = {h: v for h, v in r["hedges"].items() if v[1] < v[0]}
-    cur_len = length("\n".join(paragraphs(Path(r["file"]).read_text(encoding="utf-8"))))
-    base_len = length("\n".join(paragraphs(Path(baseline).read_text(encoding="utf-8"))))
+    cur_len = length("\n".join(paragraphs(read_input(r["file"]))))
+    base_len = length("\n".join(paragraphs(read_input(baseline))))
     r["length_unit"] = "words" if r.get("skipped") else "han"
     r["baseline_len"], r["current_len"] = base_len, cur_len
     r["length_delta_pct"] = round(100.0 * (cur_len - base_len) / base_len, 1) if base_len else None
@@ -222,7 +226,7 @@ def main():
     lists = load_lists([BLACKLIST] + ([opts["--lexicon"]] if "--lexicon" in opts else []))
     reports = [check(f, *lists, sd_check=sd_check) for f in files]
     for r in reports:
-        if not is_chinese("\n".join(paragraphs(Path(r["file"]).read_text(encoding="utf-8")))):
+        if not is_chinese("\n".join(paragraphs(read_input(r["file"])))):
             r["skipped"] = True
             r["fail"] = []
     if "--baseline" in opts:

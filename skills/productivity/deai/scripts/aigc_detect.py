@@ -88,8 +88,11 @@ DEFAULT_DETECTORS = {"zh": "mpu,mpu-short", "en": "desklib,mpu-en"}
 
 def detect_lang(text: str) -> str:
     """zh when Chinese characters are at least 30% of (Chinese characters + Latin words) in
-    the prose, ignoring code fences, inline code and URLs. prose_check.py uses the same rule."""
+    the body text (no code, headings, tables, quotes, captions, notes, inline code or URLs).
+    prose_check.is_chinese applies the same rule to its body paragraphs."""
     prose = re.sub(r"```.*?```", " ", text, flags=re.S)
+    # Body lines only, like prose_check.paragraphs(): no headings, tables, quotes, captions, notes.
+    prose = "\n".join(l for l in prose.splitlines() if not SKIP_LINE.match(l) and not l.lstrip().startswith(">"))
     prose = re.sub(r"`[^`\n]*`|https?://\S+", " ", prose)
     cjk = len(re.findall(r"[\u4e00-\u9fff]", prose))
     words = len(re.findall(r"[A-Za-z]+", prose))

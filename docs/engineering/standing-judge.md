@@ -27,7 +27,7 @@ Every round ends on exactly one verdict, and the report leads with it. The loop 
 - **PASS**: the bar holds, and a panel of judges with lenses the agent didn't pick found nothing at or above the bar's severity on the final commit.
 - **PANEL**: the bar just passed, so the next round is the panel.
 - **OWNER**: what blocks the bar needs your decision or outside evidence (real credentials, a human sign-off).
-- **PLATEAU**: two rounds without movement. More rounds of the same approach won't get there. An open-ended goal like "as fast as possible" ends here, at the limit.
+- **PLATEAU**: two rounds in a row with the bar unmet, no score moving, and no new finding at or above the bar's severity. More rounds of the same approach won't get there. An open-ended goal like "as fast as possible" ends here, at the limit: two rejected candidates in a row.
 - **REWRITE**: one area keeps regressing, so the agent rewrites it to a stated rule instead of patching it again.
 - **CONTINUE**: something code can fix still blocks the bar.
 
@@ -37,7 +37,7 @@ This is the answer to "should we keep developing this?" A gate that only ever sa
 
 ## The gate file
 
-Before round 1 the agent writes `.judge/gate.md` (excluded from git): the bar, the dimensions, your owner decisions, what the loop may never touch on your machine, a budget, the stop rules, and how far a fix may ship without asking. It shows you the bar, owner items, budget and ship path before round 1. After that the bar is frozen. Thresholds don't move to let the work pass. Each round is logged in `.judge/rounds.md`, so a judge that dies or a new session picks up where the loop left off.
+Before round 1 the agent writes `.judge/gate.md` (excluded from git): the bar, the dimensions, your owner decisions, what the loop may never touch on your machine, a budget, the stop rules, and how far a fix may ship without asking. It shows you the bar, owner items, budget and ship path before round 1. In a headless run that can't ask, it proceeds and marks every report "gate unconfirmed" until you confirm. After that the bar is frozen. Thresholds don't move to let the work pass. Each round is logged in `.judge/rounds.md`, so a judge that dies or a new session picks up where the loop left off.
 
 ## Common questions
 
