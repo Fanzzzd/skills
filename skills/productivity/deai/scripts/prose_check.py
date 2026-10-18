@@ -166,6 +166,10 @@ def check(path, red, yellow, regex, abstract, defense, sd_check=True):
 # is counted once and not again as its inner character. Single characters that are
 # usually part of other words get context: 不仅 is not 仅, 合约 is not 约, 崇尚 is not 尚.
 NUM = "[为合莫近\\d一二两三四五六七八九十百千万几〇零数]"
+# 约 is a hedge before a number or a quantity verb (约 22%、约有、约占、约半数), not as the
+# second half of a word (签约、合约、节约), even when a number follows.
+_YUE = ("(?<![合签违预节制公条契履缔简婚集邀特践誓赴解立守隐])约"
+        "(?=\\s*(?:[有占达在超计略摸半]|" + NUM + "))")
 HEDGES_ZH = {
     "可能": ["可能", "或许", "也许"],
     "条件": ["如果", "假如", "倘若", "如有", "若(?!干)"],
@@ -176,7 +180,7 @@ HEDGES_ZH = {
     "程度": ["(?<!计)较", "相对"],
     "尚未": ["尚(?=[未无不待需难])", "还没", "还未", "仍未", "暂未"],
     "仅": ["仅仅", "(?<!不)仅", "只限", "只是"],
-    "约": ["大约", "约" + "(?=" + NUM + ")", "左右", "前后"],
+    "约": ["大约", _YUE, "左右", "前后"],
 }
 _EN_NUM = r"(?=\s+(?:\d|[$£€~]|one|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|a hundred|a thousand|half|a third|a quarter|a dozen))"
 HEDGES_EN = {
