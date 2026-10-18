@@ -9,6 +9,11 @@ Status: <confirmed | unconfirmed>
 Kind: <code | parity | UX | performance | prose | research>
 Reference: <named product, repo URL pinned to a commit, or "none">
 
+## Evidence (the kind's rules from gate-kinds.md, copied here)
+
+- <rule>
+- <rule>
+
 ## Bar (binary, decides PASS)
 
 - <criterion, e.g. no open finding of medium or higher>

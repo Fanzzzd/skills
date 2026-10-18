@@ -13,7 +13,7 @@ The judge is fresh each round on purpose. A judge that remembers its last verdic
 
 Before round 1, write `.judge/gate.md` from [references/gate-file.md](references/gate-file.md) and add `.judge/` to `.git/info/exclude`. Read the conversation, the repo (README, docs, ADRs, `CLAUDE.md`) and memory before asking the user anything. The gate file holds:
 
-- **Kind.** Pick the gate kind from [references/gate-kinds.md](references/gate-kinds.md) (code, parity, UX, performance, prose, research) and copy its evidence rules. The kind decides what the judge must look at; a judge reading only code misses what only a running product shows.
+- **Kind.** Pick the gate kind from [references/gate-kinds.md](references/gate-kinds.md) (code, parity, UX, performance, prose, research) and copy its rules into the gate file's Evidence section; every judge reads them there. The kind decides what the judge must look at; a judge reading only code misses what only a running product shows.
 - **Bar.** Binary criteria with a severity threshold decide PASS: "no finding of medium or higher", "every P0 passes", "all seven persona tasks complete". Scores 0 to 10 per dimension track progress beside them. A loop whose only bar is "every dimension 10" drifts and oscillates.
 - **Owner items.** Choices the owner made, and gaps no code can close (stars, notarization, credentials, a human sign-off). An owner item is never a finding; it counts against the bar only when a criterion names it ("every P0 passes" where one P0 needs real credentials).
 - **Sandbox.** What neither role may touch: the user's running apps, real data, other repos, the pointer, public networks in the PASS path. List the forbidden commands on this machine. The fixer's test runs obey it too.

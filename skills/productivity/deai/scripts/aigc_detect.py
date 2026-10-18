@@ -425,4 +425,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except OSError as e:
+        # Offline by default (see the top of the file), so a missing cache surfaces here.
+        if os.environ.get("AIGC_ONLINE") == "1":
+            raise
+        sys.exit(f"Detector weights are not cached yet ({e.__class__.__name__}). Download them once:\n"
+                 f"  AIGC_ONLINE=1 {Path(__file__).resolve().parent / 'aigc'} {' '.join(sys.argv[1:])}")

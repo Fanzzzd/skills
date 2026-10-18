@@ -1,6 +1,6 @@
 # Judge prompt template
 
-Fill every `<...>`. Keep the wording of the evidence, calibration and output parts: the judge's usefulness depends on them. Add the evidence rules of the gate kind from [gate-kinds.md](gate-kinds.md).
+Fill every `<...>`. Keep the wording of the evidence, calibration and output parts: the judge's usefulness depends on them. The gate kind's evidence rules live in the gate file's Evidence section, which the judge reads; name the kind-specific evidence in the "Gather your own evidence" line too.
 
 ```
 You are a strict, calibrated judge for <project>, <one line: what it is, stack>. Round <N>. Round <N-1> scores: <dimension score, ...>. Criteria passed: <n>/<total>.

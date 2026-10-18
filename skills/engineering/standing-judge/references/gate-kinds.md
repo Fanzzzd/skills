@@ -1,6 +1,6 @@
 # Gate kinds
 
-Pick one kind per gate. Each sets what the judge must look at and how the bar is phrased. Copy the chosen kind's rules into the gate file.
+Pick one kind per gate. Each sets what the judge must look at and how the bar is phrased. Copy the chosen kind's rules into the gate file's Evidence section.
 
 | The user wants | Kind |
 |---|---|

@@ -88,7 +88,7 @@ $S/scripts/aigc FILE.md
 
 细节见 `references/aigc-detector.md`。
 
-- 解释器：先找 `$AIGC_PY`，再找 `~/.cache/deai/venv`。都没有时 `aigc` 会打印建环境的两条命令，照着跑一次。首次运行要联网下载权重（`AIGC_ONLINE=1`），之后离线运行。
+- 解释器：先找 `$AIGC_PY`，再找 `~/.cache/deai/venv`。都没有时 `aigc` 会打印建环境的两条命令，照着跑一次。脚本默认离线运行，首次必须加 `AIGC_ONLINE=1` 下载权重；忘了加时它会打印这条命令。
 - 看整篇 mpu 超阈值段落比例，不看单段。ChatGPT 之前的人写 MBA 论文 18% 至 44%，代理初稿 70% 至 90%。
 - 参照目标 ≤10%。这是口味参照，不是目标本身。分数应当靠补具体对象和真实材料降下来，不靠同义替换和口语化。
 - 语言路由：`--lang auto`（默认）按汉字占比判断。中文用 mpu + mpu-short；英文用 desklib + mpu-en。也可以用 `--lang` 手动指定。
@@ -109,7 +109,7 @@ $S/scripts/aigc FILE.md
    $S/scripts/run_judges.sh ch04-r1 chapters/04.md review/loop auto "data/访谈.txt,data/digest.md"
    ```
 
-   codex（只读沙箱）和 claude（只读工具）各出一份报告：`review/loop/ch04-r1-codex.md`、`ch04-r1-claude.md`。模型用各自 CLI 的默认值，`CODEX_MODEL`、`CLAUDE_MODEL` 可覆盖。报告格式和评分标准见 `references/review-ledger.md`：数据周全度、去 AI 化程度、语言风格、AIGC 四份审计，A/B/C 三视角的 P0 至 P2 台账，七维评分，通过结论。默认跑本机装了的那几个；只想跑一个时设 `JUDGES=claude` 或 `JUDGES=codex`。两个不同来源的模型盲点不同，能跑两个就跑两个。
+   codex（`-s read-only` 沙箱）和 claude（`--tools` 只给读工具，`dontAsk` 拒绝未预先批准的命令，不加载 MCP）各出一份报告：`review/loop/ch04-r1-codex.md`、`ch04-r1-claude.md`。模型用各自 CLI 的默认值，`CODEX_MODEL`、`CLAUDE_MODEL` 可覆盖。报告格式和评分标准见 `references/review-ledger.md`：数据周全度、去 AI 化程度、语言风格、AIGC 四份审计，A/B/C 三视角的 P0 至 P2 台账，七维评分，通过结论。默认跑本机装了的那几个；只想跑一个时设 `JUDGES=claude` 或 `JUDGES=codex`。两个不同来源的模型盲点不同，能跑两个就跑两个。
 2. 每个文件起一个 fix agent。用模板生成提示词：
 
    ```bash

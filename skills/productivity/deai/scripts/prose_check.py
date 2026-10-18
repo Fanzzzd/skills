@@ -162,33 +162,38 @@ def check(path, red, yellow, regex, abstract, defense, sd_check=True):
 
 
 # 同义组：组内互换不算丢失，组合计数变少才算
+# Each group is a list of regexes, matched as one alternation so a longer form ("大约")
+# is counted once and not again as its inner character. Single characters that are
+# usually part of other words get context: 不仅 is not 仅, 合约 is not 约, 崇尚 is not 尚.
+NUM = "[为合莫近\\d一二两三四五六七八九十百千万几〇零数]"
 HEDGES_ZH = {
     "可能": ["可能", "或许", "也许"],
-    "条件": ["如果", "若", "假如", "倘若", "如有"],
+    "条件": ["如果", "假如", "倘若", "如有", "若(?!干)"],
     "未必": ["未必", "不一定", "不见得"],
     "单独": ["单独", "单凭", "仅凭", "只凭", "仅以", "仅从"],
     "充分": ["充分", "完全"],
     "部分": ["部分", "一些", "某些"],
-    "程度": ["较", "相对"],
-    "尚未": ["尚", "还没", "还未", "仍未", "暂未"],
-    "仅": ["仅", "只限", "只是"],
-    "约": ["约", "大约", "左右", "前后"],
+    "程度": ["(?<!计)较", "相对"],
+    "尚未": ["尚(?=[未无不待需难])", "还没", "还未", "仍未", "暂未"],
+    "仅": ["仅仅", "(?<!不)仅", "只限", "只是"],
+    "约": ["大约", "约" + "(?=" + NUM + ")", "左右", "前后"],
 }
+_EN_NUM = r"(?=\s+(?:\d|[$£€~]|one|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|a hundred|a thousand|half|a third|a quarter|a dozen))"
 HEDGES_EN = {
     "may": ["may", "might", "could", "possibly", "perhaps", "likely"],
     "if": ["if", "unless", "provided"],
     "some": ["some", "partly", "partially", "several"],
     "only": ["only", "solely", "merely"],
-    "about": ["about", "approximately", "roughly", "around"],
+    "about": ["about" + _EN_NUM, "approximately", "roughly", "around" + _EN_NUM],
 }
 
 
 def hedge_counts(text):
     t = re.sub(CITE_RX, "", text)
-    out = {g: sum(t.count(w) for w in ws) for g, ws in HEDGES_ZH.items()}
+    out = {g: len(re.findall("|".join(ws), t)) for g, ws in HEDGES_ZH.items()}
     low = t.lower()
     for g, ws in HEDGES_EN.items():
-        n = sum(len(re.findall(rf"\b{w}\b", low)) for w in ws)
+        n = len(re.findall(r"\b(?:" + "|".join(ws) + r")\b", low))
         if n:
             out["en:" + g] = n
     return out

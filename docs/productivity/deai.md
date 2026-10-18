@@ -18,7 +18,7 @@ For a code or product gate that runs until a bar is met, use [standing-judge](./
 ## Prerequisites
 
 - Python 3 for `prose_check.py`, the rule scanner. It covers Chinese only.
-- For the detectors: a Python 3.12 venv with `torch` and `transformers`. The `aigc` script prints the two `uv` commands that create it at `~/.cache/deai/venv`, or point `AIGC_PY` at an existing one. The first run downloads weights from Hugging Face: about 0.8 GB for the two Chinese detectors and 2.2 GB for the two English ones.
+- For the detectors: a Python 3.12 venv with `torch` and `transformers`. The `aigc` script prints the two `uv` commands that create it at `~/.cache/deai/venv`, or point `AIGC_PY` at an existing one. The script runs offline by default, so the first run needs `AIGC_ONLINE=1` to download the weights from Hugging Face (it says so if you forget): about 0.8 GB for the two Chinese detectors and 2.2 GB for the two English ones.
 - For the judge loop: the `claude` CLI, the `codex` CLI, or both. Two judges from different model families disagree in useful places.
 
 ## The detectors

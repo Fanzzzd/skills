@@ -39,7 +39,10 @@ if [[ "$JUDGES" == *codex* ]]; then
     -o "$OUT/$TAG-codex.md" "$P" < /dev/null > "$OUT/$TAG-codex.log" 2>&1 &
 fi
 if [[ "$JUDGES" == *claude* ]]; then
+  # --tools limits which tools exist and dontAsk denies anything not pre-approved, so the
+  # judge stays read-only even when the user's settings default to auto or accept-edits.
   claude -p "$P" ${CLAUDE_MODEL:+--model "$CLAUDE_MODEL"} --add-dir "$S/.." \
+    --tools "Read,Grep,Glob,Bash" --permission-mode dontAsk --strict-mcp-config \
     --allowedTools "Read,Grep,Glob,Bash(python3 $S/prose_check.py:*)" \
     > "$OUT/$TAG-claude.md" 2> "$OUT/$TAG-claude.log" &
 fi
