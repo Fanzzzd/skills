@@ -64,7 +64,7 @@ python3 $S/scripts/prose_check.py FILE.md --baseline /tmp/FILE.orig.md
 $S/scripts/aigc FILE.md
 ```
 
-- prose_check 非零必须处理，或者在交付说明里写明为什么保留。英文稿它会报"跳过"，这不算通过，英文稿靠检测器、judge 和人工比对限定词。
+- prose_check 非零必须处理，或者在交付说明里写明为什么保留。英文稿它会报"规则扫描跳过"，这不算通过：英文稿靠检测器和 judge，限定词照样用 `--baseline` 比对（含 may、might、if、some 等英文限定词），篇幅按词数算。
 - `--baseline` 报限定词变少时逐处核对；同义替换、句子合并造成的计数变化可以保留，但要写明。
 - 篇幅变化看输出里的"篇幅"一行。
 - 逐项核对事实账本。

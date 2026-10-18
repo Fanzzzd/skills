@@ -10,10 +10,10 @@ Usage:
   --json               输出 JSON。
 
 Exit code 1 when any check fails. Passing the script does not mean the prose is natural;
-paragraph-level judging decides. A file whose letters are under 30% Chinese (the same
-rule the detector's language router uses) is reported as skipped, with exit 0 and
-"skipped": true in JSON: the rules are Chinese-only, so English drafts rely on the
-detectors and the judges.
+paragraph-level judging decides. A non-Chinese draft (Chinese characters under 30% of
+Chinese characters plus Latin words in the body, the same rule aigc_detect.py routes by) is
+reported as skipped, with "skipped": true in JSON. It exits 0 unless --baseline finds
+dropped hedges; the hedge check covers English hedges too.
 """
 import json
 import re
@@ -72,6 +72,19 @@ def han(s):
     return len(re.findall(r"[一-鿿]", s))
 
 
+def is_chinese(body):
+    """Same rule as aigc_detect.detect_lang, applied to body paragraphs: Chinese characters are
+    at least 30% of (Chinese characters + Latin words), ignoring inline code and URLs."""
+    prose = re.sub(r"`[^`\n]*`|https?://\S+", " ", body)
+    cjk = han(prose)
+    return cjk >= 0.3 * max(1, cjk + len(re.findall(r"[A-Za-z]+", prose)))
+
+
+def length(body):
+    """Chinese characters for a Chinese draft, Latin words otherwise."""
+    return han(body) if is_chinese(body) else len(re.findall(r"[A-Za-z]+", body))
+
+
 def sentences(p):
     p = re.sub(CITE_RX, "", p)
     return [s for s in re.split(r"[。！？；!?;]", p) if han(s) >= 2]
@@ -117,7 +130,8 @@ def check(path, red, yellow, regex, abstract, defense, sd_check=True):
             r["yellow"][w] = c
     r["self_ref"] = sum(body.count(w) for w in ("本文", "本研究", "笔者"))
     r["bold"] = body.count("**")
-    r["list_lines"] = [l[:40] for l in text.splitlines() if re.match(r"^\s*([-*+]|\d+\.)\s+", l)]
+    prose = re.sub(r"```.*?```", "", text, flags=re.S)
+    r["list_lines"] = [l[:40] for l in prose.splitlines() if re.match(r"^\s*([-*+]|\d+\.)\s+", l)]
     all_lens = [han(s) for p in paras for s in sentences(p)]
     r["sent_len_mean"] = round(statistics.mean(all_lens), 1) if all_lens else 0
     r["sent_len_sd"] = round(statistics.pstdev(all_lens), 1) if all_lens else 0
@@ -182,9 +196,11 @@ def compare_baseline(r, baseline):
     keys = sorted(set(cur) | set(base), key=lambda x: (x.startswith("en:"), x))
     r["hedges"] = {h: (base.get(h, 0), cur.get(h, 0)) for h in keys}
     r["hedge_drops"] = {h: v for h, v in r["hedges"].items() if v[1] < v[0]}
-    base_han = han("\n".join(paragraphs(Path(baseline).read_text(encoding="utf-8"))))
-    r["baseline_han"] = base_han
-    r["length_delta_pct"] = round(100.0 * (r["han"] - base_han) / base_han, 1) if base_han else None
+    cur_len = length("\n".join(paragraphs(Path(r["file"]).read_text(encoding="utf-8"))))
+    base_len = length("\n".join(paragraphs(Path(baseline).read_text(encoding="utf-8"))))
+    r["length_unit"] = "words" if r.get("skipped") else "han"
+    r["baseline_len"], r["current_len"] = base_len, cur_len
+    r["length_delta_pct"] = round(100.0 * (cur_len - base_len) / base_len, 1) if base_len else None
     if r["hedge_drops"]:
         r["fail"].append("限定词比原稿少：" + "，".join(f"{h} {a}→{b}" for h, (a, b) in r["hedge_drops"].items()))
 
@@ -206,9 +222,7 @@ def main():
     lists = load_lists([BLACKLIST] + ([opts["--lexicon"]] if "--lexicon" in opts else []))
     reports = [check(f, *lists, sd_check=sd_check) for f in files]
     for r in reports:
-        text = Path(r["file"]).read_text(encoding="utf-8")
-        latin = len(re.findall(r"[A-Za-z]", text))
-        if r["han"] < 0.3 * (r["han"] + latin):
+        if not is_chinese("\n".join(paragraphs(Path(r["file"]).read_text(encoding="utf-8")))):
             r["skipped"] = True
             r["fail"] = []
     if "--baseline" in opts:
@@ -241,9 +255,11 @@ def main():
             if "hedges" in r:
                 print("  限定词（原稿→现稿） " + "，".join(f"{h} {a}→{b}" for h, (a, b) in r["hedges"].items()))
                 d = r["length_delta_pct"]
-                print(f"  篇幅 原稿 {r['baseline_han']} → 现稿 {r['han']}（{'' if d is None else f'{d:+}%'}）")
+                unit = "词" if r["length_unit"] == "words" else "字"
+                print(f"  篇幅 原稿 {r['baseline_len']}{unit} → 现稿 {r['current_len']}{unit}（{'' if d is None else f'{d:+}%'}）")
             if r.get("skipped"):
-                print("  结果：跳过：非中文稿，规则扫描不适用，英文稿看检测器和 judge")
+                tail = "；" + "；".join(r["fail"]) if r["fail"] else ""
+                print("  结果：规则扫描跳过（非中文稿，英文稿看检测器和 judge）" + tail)
                 continue
             print("  结果：" + ("不通过：" + "；".join(r["fail"]) if r["fail"] else "通过"))
     return 1 if any(r["fail"] for r in reports) else 0

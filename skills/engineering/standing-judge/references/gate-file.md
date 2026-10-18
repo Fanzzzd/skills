@@ -5,6 +5,7 @@ Write this to `.judge/gate.md` before round 1. Fill every `<...>`. Delete a sect
 ```markdown
 # Gate: <project>, <one line on what it is>
 
+Status: <confirmed | unconfirmed>
 Kind: <code | parity | UX | performance | prose | research>
 Reference: <named product, repo URL pinned to a commit, or "none">
 
@@ -37,7 +38,7 @@ Max parallel test workers while judges run: <N>.
 ## Budget and stop
 
 Budget: <N rounds | N hours>.
-Plateau: two rounds with no dimension moving and no new medium-or-higher finding.
+Plateau: <default: two rounds in a row with the bar unmet, no dimension moving, and no new finding at or above the bar's severity | performance, open-ended: two REJECTED candidates in a row>.
 Judge noise: <spread measured on an unchanged candidate, or "not measured, bar is binary">.
 
 ## Ship path
@@ -54,5 +55,6 @@ Scores: <dimension score, ...>
 Criteria: <passed>/<total>
 Fixed: <one clause per finding>
 Tests: <suite pass counts, flakes named>
-Verdict: <PANEL | PASS | OWNER | BUDGET | PLATEAU | REWRITE | CONTINUE>
+Verdict: <BUDGET | PASS | PANEL | OWNER | PLATEAU | REWRITE | CONTINUE>
+Follow-ups (below the bar's severity, after the bar passed): <list, or none>
 ```

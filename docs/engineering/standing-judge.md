@@ -21,15 +21,17 @@ For a single review of one diff, use a code review skill instead. This skill is 
 
 ## The verdict
 
-Every round ends on exactly one verdict, and the report leads with it:
+Every round ends on exactly one verdict, and the report leads with it. The loop has two phases: while the bar is unmet it fixes everything it verifies; once the bar passes it fixes only what blocks the bar, and a panel confirms the result.
 
-- **PANEL**: the bar just passed, so the agent closes the last checks before PASS: one more judge round on the last fix, and a panel of judges with other lenses.
-- **PASS**: every binary criterion passes, the last fix was judged, and a panel of judges with other lenses found nothing at or above the bar's severity.
-- **OWNER**: only gaps that need your decision or outside evidence remain (stars, notarization, real credentials, a human sign-off).
+- **BUDGET**: the round or time budget is spent. The cap is hard, even when only the panel was left.
+- **PASS**: the bar holds, and a panel of judges with lenses the agent didn't pick found nothing at or above the bar's severity on the final commit.
+- **PANEL**: the bar just passed, so the next round is the panel.
+- **OWNER**: what blocks the bar needs your decision or outside evidence (real credentials, a human sign-off).
 - **PLATEAU**: two rounds without movement. More rounds of the same approach won't get there. An open-ended goal like "as fast as possible" ends here, at the limit.
-- **BUDGET**: the round or time budget is spent.
 - **REWRITE**: one area keeps regressing, so the agent rewrites it to a stated rule instead of patching it again.
-- **CONTINUE**: fixable findings remain.
+- **CONTINUE**: something code can fix still blocks the bar.
+
+Findings below the bar's severity that turn up after the bar passes go on a follow-up list in the final report instead of reopening the loop.
 
 This is the answer to "should we keep developing this?" A gate that only ever says "continue" or "perfect" is not doing its job.
 

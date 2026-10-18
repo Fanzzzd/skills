@@ -15,12 +15,12 @@ Before round 1, write `.judge/gate.md` from [references/gate-file.md](references
 
 - **Kind.** Pick the gate kind from [references/gate-kinds.md](references/gate-kinds.md) (code, parity, UX, performance, prose, research) and copy its evidence rules. The kind decides what the judge must look at; a judge reading only code misses what only a running product shows.
 - **Bar.** Binary criteria with a severity threshold decide PASS: "no finding of medium or higher", "every P0 passes", "all seven persona tasks complete". Scores 0 to 10 per dimension track progress beside them. A loop whose only bar is "every dimension 10" drifts and oscillates.
-- **Owner items.** Choices the owner made, and gaps no code can close (stars, notarization, credentials, a human sign-off). The judge never scores against them.
+- **Owner items.** Choices the owner made, and gaps no code can close (stars, notarization, credentials, a human sign-off). An owner item is never a finding; it counts against the bar only when a criterion names it ("every P0 passes" where one P0 needs real credentials).
 - **Sandbox.** What neither role may touch: the user's running apps, real data, other repos, the pointer, public networks in the PASS path. List the forbidden commands on this machine. The fixer's test runs obey it too.
-- **Budget and stop rules.** A cap in rounds or wall clock, and a plateau rule (default: two rounds with the bar unmet, no dimension moving, and no new medium-or-higher finding).
+- **Budget and stop rules.** A hard cap in rounds or wall clock, and the plateau rule. The default plateau is two rounds in a row with the bar unmet, no dimension moving, and no new finding at or above the bar's severity; the performance kind defines its own.
 - **Ship path.** How far a fix travels without asking: commit only, or commit and push, or a release PR. Verified fixes ship on it as they land; the gate never holds a release hostage.
 
-Show the user the bar, owner items, budget and ship path in a few lines. Step 1 is done when the user confirms them, or has told you to proceed on your judgment. When the harness can't ask (a headless run), proceed and mark the gate file `unconfirmed`.
+Show the user the bar, owner items, budget and ship path in a few lines. Step 1 is done when the user confirms them, or has told you to proceed on your judgment. When the harness can't ask (a headless run), proceed with `Status: unconfirmed` in the gate file, and open every report with "gate unconfirmed" until the user confirms.
 
 Then freeze the bar, the rubric and the thresholds. A threshold that moves to let the work pass is no longer a gate. Change the gate file only when the user settles a new owner item or changes the bar, and say so in the next report.
 
@@ -31,7 +31,7 @@ When the bar is a score from the judge itself, measure the judge's noise once: r
 1. **Freeze the candidate.** Commit, note the SHA. The judge scores that SHA from a clean clone in its own temp directory, never your working tree.
 2. **Launch the judge** in the background with [references/judge-prompt.md](references/judge-prompt.md), filled in. Alternate the judge's model between rounds when the harness offers more than one. While it runs, write the test you were missing or check CI.
 3. **Verify every finding** before fixing it. Judges make confident wrong claims. Reproduce the finding; when it is wrong, fix what is really there and tell the next judge. A finding that re-raises an owner item is dropped.
-4. **Fix every verified finding**, most severe first, in one pass. Reproduce first, then fix: a fix aimed at a guess lands beside the bug.
+4. **Fix** most severe first, in one pass. While the bar is unmet, fix every verified finding. Once the bar has passed, fix only findings at or above its severity; the rest go to the follow-up list in `.judge/rounds.md` for after the loop. Reproduce first, then fix: a fix aimed at a guess lands beside the bug.
 5. **Prove it.** Build, unit tests, linter, then the end-to-end path the change touches. Confirm the suite runs the build you just made. Run a flaky suite several times and report the count ("7 of 8, the failure the known timing flake"). A fix no test can reach gets a test, or is reported as reasoned from code.
 6. **Ship** on the gate file's ship path, and only as far as it goes: a changeset if the repo uses them, a commit with the test results, then a push or release only if the ship path includes it.
 7. **Record the round** in `.judge/rounds.md`: SHA, judge model, scores, findings fixed, test counts, verdict. The file is the loop's memory, so a dead judge or a new session resumes from it.
@@ -41,28 +41,27 @@ Every judge prompt names the fixes to verify and the side effects each could cau
 
 ## 3. Issue the verdict
 
+The loop has two phases. While the bar is unmet, rounds fix everything they verify. Once the bar passes, the loop is closing: it fixes only what blocks the bar, and a panel confirms the final SHA. The stop rules bind in both phases.
+
 After each round, walk the table from the top and take the first verdict whose condition holds. Lead the report with it.
 
 | Verdict | When | Next |
 |---|---|---|
-| **PANEL** | Every binary criterion passes on the frozen SHA, but a pre-pass check below is still open. | Close it (one more judge round, or the panel), then walk the table again. |
-| **PASS** | Every binary criterion passes on the frozen SHA, and both pre-pass checks below hold. | Stop. Report the final table. |
-| **OWNER** | Gaps at or above the bar's severity remain, and every one of them is an owner item. | Stop. List each item and what it would take. |
-| **BUDGET** | The budget is spent. | Stop. Report the distance to the bar. |
+| **BUDGET** | The budget is spent. | Stop. Report the distance to the bar, and whether a panel was still pending. |
+| **PASS** | The bar holds on the current SHA, and this round was a panel on that SHA that found nothing at or above the bar's severity. | Stop. Report the final table and the follow-up list. |
+| **PANEL** | The bar holds on the current SHA, and no clean panel has judged it yet. | Run the panel next round (see below). |
+| **OWNER** | The bar is unmet, and everything blocking it is an owner item. | Stop. List each item and what it would take. |
 | **PLATEAU** | The plateau rule fired. | Stop. Report the distance to the bar and what a different approach would need. |
 | **REWRITE** | One area regressed two or three rounds running, each fix opening the next hole. | Write the rule the area should follow in two or three sentences, rewrite the area to it, write the end-to-end test of the real scenario, then run the next round. |
-| **CONTINUE** | Verified findings remain that code can fix. | Fix, ship, next round. |
+| **CONTINUE** | The bar is unmet, and code can fix something blocking it: a finding, or a failing criterion. | Fix, ship, next round. |
 
-A goal with no fixed number ("as fast as possible", "to the limit") has no PASS: it ends on PLATEAU, BUDGET or OWNER. Each round's candidate is ACCEPTED or REJECTED (see the performance kind in gate-kinds); an ACCEPTED candidate is progress, not a stop.
+A goal with no fixed number ("as fast as possible", "to the limit") is a target the bar never meets, so it never reaches PANEL or PASS. It ends on PLATEAU, which for it means two REJECTED candidates in a row (see the performance kind in gate-kinds), or on BUDGET or OWNER. An ACCEPTED candidate is progress, not a stop.
 
 When fixes oscillate (one rule's fix trips another), the rubric conflicts with itself. State the precedence in the gate file and the judge prompt before the next round.
 
-### Before PASS
+### The panel
 
-The PANEL verdict holds until both are true:
-
-- **The last fix was judged.** A loop that stops on a fix nobody has looked at is reporting a guess.
-- **A panel has looked.** One judge's 10 covers only the dimensions it was given. The first time a candidate passes the bar, run one panel round on it: three to five judges in parallel, each with a lens the fixer did not pick (release and CI, accessibility, newcomer onboarding, security), on a different model where possible. Panel findings count against the bar at their own severity. Findings below the bar's threshold go in the final report as follow-ups and do not reopen the loop. After the panel's findings are fixed, the next round re-runs only the lenses that found something at or above the threshold; lenses that came back clean are done.
+One judge's 10 covers only the dimensions it was given. The panel is three to five judges in parallel on the same SHA, each with a lens the fixer did not pick (release and CI, accessibility, newcomer onboarding, security), on a different model where possible. Panel findings count against the bar at their own severity. When a panel finds something at or above it, fix it; the next round re-runs only the lenses that found something, on the new SHA, and lenses that came back clean are done. PASS needs every lens clean at least once since the bar first passed, the last of them on the current SHA.
 
 ## Calibration
 

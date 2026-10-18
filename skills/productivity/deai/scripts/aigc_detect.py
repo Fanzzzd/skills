@@ -87,9 +87,13 @@ DEFAULT_DETECTORS = {"zh": "mpu,mpu-short", "en": "desklib,mpu-en"}
 
 
 def detect_lang(text: str) -> str:
-    cjk = len(re.findall(r"[\u4e00-\u9fff]", text))
-    latin = len(re.findall(r"[A-Za-z]", text))
-    return "zh" if cjk >= 0.3 * max(1, cjk + latin) else "en"
+    """zh when Chinese characters are at least 30% of (Chinese characters + Latin words) in
+    the prose, ignoring code fences, inline code and URLs. prose_check.py uses the same rule."""
+    prose = re.sub(r"```.*?```", " ", text, flags=re.S)
+    prose = re.sub(r"`[^`\n]*`|https?://\S+", " ", prose)
+    cjk = len(re.findall(r"[\u4e00-\u9fff]", prose))
+    words = len(re.findall(r"[A-Za-z]+", prose))
+    return "zh" if cjk >= 0.3 * max(1, cjk + words) else "en"
 
 
 def read_input(path: str) -> str:

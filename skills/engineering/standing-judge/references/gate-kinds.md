@@ -37,7 +37,7 @@ Pick one kind per gate. Each sets what the judge must look at and how the bar is
 - Measure the noise floor from two baseline runs. Run A/B/A/B interleaved. A metric is IMPROVED only when both candidate runs beat both baseline runs by more than the noise; REGRESSED the mirror case; otherwise unchanged.
 - Check that the measurement does not perturb the system: a synchronous stats call on the hot path can turn hundreds of requests per second into a dozen.
 - A candidate is ACCEPTED when the target metric IMPROVED and nothing user-facing REGRESSED, and becomes the new baseline; otherwise it is REJECTED and reverted. ACCEPTED is a round result, not the PASS verdict.
-- A fixed target ("p95 under 120 ms") ends on PASS when a candidate meets it. "As fast as possible" or "to the limit" has no PASS: it ends on PLATEAU when two candidates in a row are REJECTED with nothing beyond the noise, or on BUDGET.
+- A fixed target ("p95 under 120 ms") ends on PASS when a candidate meets it. "As fast as possible" or "to the limit" has no PASS. Its plateau is two REJECTED candidates in a row; it ends there, or on BUDGET.
 - Keep baselines and the noise floor in `.judge/rounds.md`, so a judge that dies mid-baseline is replaced without starting over.
 
 ## Prose

@@ -37,7 +37,7 @@ P0 issues must reach zero. After that the loop stops when P1 counts and scores s
 Judges counted reasoning connectives ("because", "therefore") as AI patterns, and the fix agents deleted them. The skill now separates signposts (delete) from reasoning connectives (keep), and every few rounds it reads the whole chapter only for coherence.
 
 **Does it work for English?**
-The single pass, the judge loop and the fix prompt all take English drafts. The rule scanner is Chinese-only: on an English file it reports "skipped", which is not a pass. English drafts rely on the English detectors, the judges, and a hand check of hedges against the original. The judges' pattern codes are written for Chinese, so English reports mark patterns in plain words.
+The single pass, the judge loop and the fix prompt all take English drafts. The rule scanner is Chinese-only: on an English file it reports "skipped", which is not a pass. English drafts rely on the English detectors and the judges, and `--baseline` still checks English hedges and word count against the original. The judges' pattern codes are written for Chinese, so English reports mark patterns in plain words.
 
 ## It's working if
 
