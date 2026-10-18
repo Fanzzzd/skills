@@ -1,0 +1,17 @@
+{
+  "name": "fanzzzd",
+  "owner": {
+    "name": "Zhendi Fan",
+    "url": "https://github.com/Fanzzzd"
+  },
+  "description": "Zhendi Fan's agent skills, as an installable plugin.",
+  "plugins": [
+    {
+      "name": "fanzzzd-skills",
+      "source": "./",
+      "description": "Agent skills for running AI judge gates over real projects.",
+      "category": "engineering",
+      "keywords": ["skills", "judge", "review", "quality-gate"]
+    }
+  ]
+}

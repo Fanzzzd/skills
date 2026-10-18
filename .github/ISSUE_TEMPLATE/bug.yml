@@ -1,0 +1,39 @@
+name: Bug
+description: A skill did the wrong thing in a real session.
+labels: ["bug"]
+body:
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      description: Which skill, e.g. `standing-judge`.
+    validations:
+      required: true
+  - type: input
+    id: harness
+    attributes:
+      label: Harness, version and install route
+      description: e.g. Claude Code 2.1.302 via the plugin, Codex 0.161 via skills.sh.
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model and effort
+      description: For the main agent and, if different, the judge.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you ran and what the skill did. Paste the judge prompt and verdict if the loop went wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What it should have done, and which line of the SKILL.md (if any) says so.
+    validations:
+      required: true

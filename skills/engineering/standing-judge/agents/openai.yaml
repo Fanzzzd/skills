@@ -1,0 +1,3 @@
+interface:
+  display_name: "Standing Judge"
+  short_description: "Judge-gated loop: score, fix, repeat until done"

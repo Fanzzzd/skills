@@ -1,0 +1,26 @@
+name: Idea or feedback
+description: A change to an existing skill, grounded in a failure you saw.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An idea stays open if it clears both parts of the bar in [SCOPE.md](https://github.com/Fanzzzd/skills/blob/main/SCOPE.md): an observed failure in a real session, and a fit with the skill (nothing in `.out-of-scope/`, not a personal config option). New skills are not accepted.
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: The session that went wrong
+      description: What you ran, what happened, what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: The change you propose
+    validations:
+      required: true

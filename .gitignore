@@ -1,0 +1,5 @@
+node_modules
+.DS_Store
+# Skills tied to one private codebase. Kept next to the public ones for local
+# linking, never published.
+/private/
