@@ -66,7 +66,7 @@ gate file ──> freeze SHA ──> fresh judge (clean clone, own evidence)
           ship + log round <── prove <── verify each finding, fix
                                            │
                                       verdict:
-     CONTINUE | PASS | OWNER | PLATEAU | BUDGET | REWRITE
+  PANEL | PASS | OWNER | BUDGET | PLATEAU | REWRITE | CONTINUE
 ```
 
 - **The bar is binary and frozen.** "No finding of medium or higher" or "every P0 passes" decides PASS. Scores from 0 to 10 track progress beside it. Thresholds never move to let the work pass.

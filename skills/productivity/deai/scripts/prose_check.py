@@ -10,7 +10,10 @@ Usage:
   --json               输出 JSON。
 
 Exit code 1 when any check fails. Passing the script does not mean the prose is natural;
-paragraph-level judging decides. English text is scanned only for hedges and formatting.
+paragraph-level judging decides. A file whose letters are under 30% Chinese (the same
+rule the detector's language router uses) is reported as skipped, with exit 0 and
+"skipped": true in JSON: the rules are Chinese-only, so English drafts rely on the
+detectors and the judges.
 """
 import json
 import re
@@ -202,6 +205,12 @@ def main():
         return 2
     lists = load_lists([BLACKLIST] + ([opts["--lexicon"]] if "--lexicon" in opts else []))
     reports = [check(f, *lists, sd_check=sd_check) for f in files]
+    for r in reports:
+        text = Path(r["file"]).read_text(encoding="utf-8")
+        latin = len(re.findall(r"[A-Za-z]", text))
+        if r["han"] < 0.3 * (r["han"] + latin):
+            r["skipped"] = True
+            r["fail"] = []
     if "--baseline" in opts:
         for r in reports:
             compare_baseline(r, opts["--baseline"])
@@ -233,6 +242,9 @@ def main():
                 print("  限定词（原稿→现稿） " + "，".join(f"{h} {a}→{b}" for h, (a, b) in r["hedges"].items()))
                 d = r["length_delta_pct"]
                 print(f"  篇幅 原稿 {r['baseline_han']} → 现稿 {r['han']}（{'' if d is None else f'{d:+}%'}）")
+            if r.get("skipped"):
+                print("  结果：跳过：非中文稿，规则扫描不适用，英文稿看检测器和 judge")
+                continue
             print("  结果：" + ("不通过：" + "；".join(r["fail"]) if r["fail"] else "通过"))
     return 1 if any(r["fail"] for r in reports) else 0
 

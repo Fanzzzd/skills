@@ -23,12 +23,13 @@ For a single review of one diff, use a code review skill instead. This skill is 
 
 Every round ends on exactly one verdict, and the report leads with it:
 
-- **CONTINUE**: fixable findings remain.
+- **PANEL**: the bar just passed, so the agent closes the last checks before PASS: one more judge round on the last fix, and a panel of judges with other lenses.
 - **PASS**: every binary criterion passes, the last fix was judged, and a panel of judges with other lenses found nothing at or above the bar's severity.
 - **OWNER**: only gaps that need your decision or outside evidence remain (stars, notarization, real credentials, a human sign-off).
 - **PLATEAU**: two rounds without movement. More rounds of the same approach won't get there. An open-ended goal like "as fast as possible" ends here, at the limit.
 - **BUDGET**: the round or time budget is spent.
 - **REWRITE**: one area keeps regressing, so the agent rewrites it to a stated rule instead of patching it again.
+- **CONTINUE**: fixable findings remain.
 
 This is the answer to "should we keep developing this?" A gate that only ever says "continue" or "perfect" is not doing its job.
 

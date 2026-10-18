@@ -12,9 +12,9 @@
 #      CODEX_MODEL, CLAUDE_MODEL   model overrides; default: each CLI's own default
 #      JP       judge prompt template (default templates/judge-prompt.md)
 set -u
-S="$(cd "$(dirname "$0")" && pwd)"
+S="$(cd "$(dirname "$0")" && pwd -P)"
 if [ $# -lt 3 ]; then
-  sed -n '2,14p' "$0" >&2
+  sed -n '2,13p' "$0" >&2
   exit 2
 fi
 TAG="$1"; CUR="$2"; OUT="$3"; AIGC="${4:-auto}"; SRC="${5:-}"

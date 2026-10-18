@@ -54,5 +54,5 @@ Scores: <dimension score, ...>
 Criteria: <passed>/<total>
 Fixed: <one clause per finding>
 Tests: <suite pass counts, flakes named>
-Verdict: <CONTINUE | PASS | OWNER | PLATEAU | BUDGET | REWRITE>
+Verdict: <PANEL | PASS | OWNER | BUDGET | PLATEAU | REWRITE | CONTINUE>
 ```
