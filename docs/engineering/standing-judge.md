@@ -24,9 +24,9 @@ For a single review of one diff, use a code review skill instead. This skill is 
 Every round ends on exactly one verdict, and the report leads with it:
 
 - **CONTINUE**: fixable findings remain.
-- **PASS**: every binary criterion passes, the last fix was judged, and a panel of judges with other lenses found nothing new.
+- **PASS**: every binary criterion passes, the last fix was judged, and a panel of judges with other lenses found nothing at or above the bar's severity.
 - **OWNER**: only gaps that need your decision or outside evidence remain (stars, notarization, real credentials, a human sign-off).
-- **PLATEAU**: two rounds without movement. More rounds of the same approach won't get there.
+- **PLATEAU**: two rounds without movement. More rounds of the same approach won't get there. An open-ended goal like "as fast as possible" ends here, at the limit.
 - **BUDGET**: the round or time budget is spent.
 - **REWRITE**: one area keeps regressing, so the agent rewrites it to a stated rule instead of patching it again.
 
@@ -34,7 +34,7 @@ This is the answer to "should we keep developing this?" A gate that only ever sa
 
 ## The gate file
 
-Before round 1 the agent writes `.judge/gate.md` (excluded from git): the bar, the dimensions, your owner decisions, what the loop may never touch on your machine, a budget, and the stop rules. The bar is frozen. Thresholds don't move to let the work pass. Each round is logged in `.judge/rounds.md`, so a judge that dies or a new session picks up where the loop left off.
+Before round 1 the agent writes `.judge/gate.md` (excluded from git): the bar, the dimensions, your owner decisions, what the loop may never touch on your machine, a budget, the stop rules, and how far a fix may ship without asking. It shows you the bar, owner items, budget and ship path before round 1. After that the bar is frozen. Thresholds don't move to let the work pass. Each round is logged in `.judge/rounds.md`, so a judge that dies or a new session picks up where the loop left off.
 
 ## Common questions
 

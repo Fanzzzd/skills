@@ -1,6 +1,6 @@
 ---
 name: standing-judge
-description: Run a gate loop where a fresh read-only judge subagent scores the work every round and rules whether development continues. You fix every verified finding, prove it, ship it, and call the next judge, until the bar passes, a plateau or budget stops the loop, or only owner decisions remain. Covers code quality, parity with a reference product, black-box UX, performance A/B, prose, and research benchmarks. Use when the user wants an agent or subagent as a gate, judge, reviewer, 评委 or 裁判 that decides when to stop; asks to keep improving until full marks, perfect, 满分, 极限, or better than a named product; or asks whether a project is good enough to keep developing.
+description: Gate loop where a fresh read-only judge subagent scores the work every round and rules whether development continues. Covers code, parity with a named product, black-box UX, performance, prose and research gates. Use when the user wants an agent as a gate or judge (评委, 裁判) that decides when to stop, asks to keep going until perfect or full marks (满分, 极限), to beat a named product, or asks whether a project is worth developing further.
 ---
 
 # Standing judge
@@ -18,9 +18,11 @@ Before round 1, write `.judge/gate.md` from [references/gate-file.md](references
 - **Owner items.** Choices the owner made, and gaps no code can close (stars, notarization, credentials, a human sign-off). The judge never scores against them.
 - **Sandbox.** What neither role may touch: the user's running apps, real data, other repos, the pointer, public networks in the PASS path. List the forbidden commands on this machine. The fixer's test runs obey it too.
 - **Budget and stop rules.** A cap in rounds or wall clock, and a plateau rule (default: two rounds with no dimension moving and no new medium-or-higher finding).
-- **Ship path.** How a fix reaches users. Verified fixes ship on it as they land; the gate never holds a release hostage.
+- **Ship path.** How far a fix travels without asking: commit only, or commit and push, or a release PR. Verified fixes ship on it as they land; the gate never holds a release hostage.
 
-Freeze the bar, the rubric and the thresholds. A threshold that moves to let the work pass is no longer a gate. Change the gate file only when the user settles a new owner item or changes the bar, and say so in the next report.
+Show the user the bar, owner items, budget and ship path in a few lines. Step 1 is done when the user confirms them, or has told you to proceed on your judgment.
+
+Then freeze the bar, the rubric and the thresholds. A threshold that moves to let the work pass is no longer a gate. Change the gate file only when the user settles a new owner item or changes the bar, and say so in the next report.
 
 When the bar is a score from the judge itself, measure the judge's noise once: run two judges on the same unchanged candidate. A change smaller than that spread is noise and earns neither credit nor a fix.
 
@@ -31,7 +33,7 @@ When the bar is a score from the judge itself, measure the judge's noise once: r
 3. **Verify every finding** before fixing it. Judges make confident wrong claims. Reproduce the finding; when it is wrong, fix what is really there and tell the next judge. A finding that re-raises an owner item is dropped.
 4. **Fix every verified finding**, most severe first, in one pass. Reproduce first, then fix: a fix aimed at a guess lands beside the bug.
 5. **Prove it.** Build, unit tests, linter, then the end-to-end path the change touches. Confirm the suite runs the build you just made. Run a flaky suite several times and report the count ("7 of 8, the failure the known timing flake"). A fix no test can reach gets a test, or is reported as reasoned from code.
-6. **Ship** on the ship path: changeset if the repo uses them, commit with the test results, push.
+6. **Ship** on the gate file's ship path, and only as far as it goes: a changeset if the repo uses them, a commit with the test results, then a push or release only if the ship path includes it.
 7. **Record the round** in `.judge/rounds.md`: SHA, judge model, scores, findings fixed, test counts, verdict. The file is the loop's memory, so a dead judge or a new session resumes from it.
 8. **Report** in a few lines: the verdict, the score delta, what was fixed, the test counts, what the next judge checks.
 
@@ -39,23 +41,27 @@ Every judge prompt names the fixes to verify and the side effects each could cau
 
 ## 3. Issue the verdict
 
-After each round pick exactly one, and lead the report with it:
+After each round, walk the table from the top and take the first verdict whose condition holds. Lead the report with it.
 
 | Verdict | When | Next |
 |---|---|---|
-| **CONTINUE** | Verified findings remain that code can fix. | Fix, ship, next round. |
-| **PASS** | Every binary criterion passes on the frozen SHA, and the pre-pass checks below hold. | Stop. Report the final table. |
-| **OWNER** | Every remaining gap is an owner item. | Stop. List each item and what it would take. |
-| **PLATEAU** | The plateau rule fired. | Stop. Report the distance to the bar and the gaps a different approach would need. |
+| **PASS** | Every binary criterion passes on the frozen SHA, and both pre-pass checks below hold. | Stop. Report the final table. |
+| **OWNER** | Every remaining gap at or above the bar's severity is an owner item. | Stop. List each item and what it would take. |
 | **BUDGET** | The budget is spent. | Stop. Report the distance to the bar. |
-| **REWRITE** | One area regressed two or three rounds running, each fix opening the next hole. | Write the rule the area should follow in two or three sentences, rewrite the area to it, write the end-to-end test of the real scenario, then CONTINUE. |
+| **PLATEAU** | The plateau rule fired. | Stop. Report the distance to the bar and what a different approach would need. |
+| **REWRITE** | One area regressed two or three rounds running, each fix opening the next hole. | Write the rule the area should follow in two or three sentences, rewrite the area to it, write the end-to-end test of the real scenario, then run the next round. |
+| **CONTINUE** | Verified findings remain that code can fix. | Fix, ship, next round. |
+
+A goal with no fixed number ("as fast as possible", "to the limit") has no PASS: it ends on PLATEAU, BUDGET or OWNER, and each round that improves on the last is progress, not a stop.
 
 When fixes oscillate (one rule's fix trips another), the rubric conflicts with itself. State the precedence in the gate file and the judge prompt before the next round.
 
 ### Before PASS
 
-- **The last fix was judged.** A loop that stops on a fix nobody has looked at is reporting a guess. Run one more round, or tell the user plainly that the final change is reasoned, not observed.
-- **A panel has looked.** One judge's 10 covers only the dimensions it was given. Run one panel round: three to five judges in parallel, each with a lens the fixer did not pick (release and CI, accessibility, newcomer onboarding, security), on a different model where possible. Fold its findings into CONTINUE.
+Both hold, or the verdict is CONTINUE:
+
+- **The last fix was judged.** A loop that stops on a fix nobody has looked at is reporting a guess.
+- **A panel has looked.** One judge's 10 covers only the dimensions it was given. The first time a candidate passes the bar, run one panel round on it: three to five judges in parallel, each with a lens the fixer did not pick (release and CI, accessibility, newcomer onboarding, security), on a different model where possible. Panel findings count against the bar at their own severity. Findings below the bar's threshold go in the final report as follow-ups and do not reopen the loop.
 
 ## Calibration
 
@@ -68,6 +74,6 @@ The judge must be calibrated, or the loop never ends:
 
 If two judges in a row hold a 9 with no nameable change, that dimension is done.
 
-## Self-grading is no gate
+## A benchmark the fixer built is no gate
 
-A bar the fixer wrote and a benchmark the fixer built grade the fixer's own guess. When the work defines its own test (a research result, a custom eval), the judge picks a public standard benchmark where one exists, or audits the custom one for leakage and difficulty before any score counts.
+A benchmark or eval the fixer wrote grades the fixer's own guess. When the work defines its own test (a research result, a custom eval), the judge picks a public standard benchmark where one exists, or audits the custom one for leakage and difficulty before any score counts.

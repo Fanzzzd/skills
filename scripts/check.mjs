@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Enforces the invariants in AGENTS.md. Run with `npm run check`; CI runs it
-// on every push and pull request. Exits 1 and lists every violation.
+// on every push to main and every pull request. Exits 1 and lists every violation.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -22,6 +22,21 @@ const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclud
 })
   .split("\n")
   .filter((f) => f && existsSync(join(repo, f)));
+
+// Reads a top-level YAML scalar, including `>` and `|` block scalars.
+function yamlScalar(yaml, key) {
+  const lines = yaml.split("\n");
+  const i = lines.findIndex((l) => l.startsWith(`${key}:`));
+  if (i < 0) return undefined;
+  const inline = lines[i].slice(key.length + 1).trim();
+  if (!/^[>|][+-]?$/.test(inline)) return inline.replace(/^["']|["']$/g, "");
+  const block = [];
+  for (const l of lines.slice(i + 1)) {
+    if (l && !/^\s/.test(l)) break;
+    block.push(l.trim());
+  }
+  return block.join(inline.startsWith(">") ? " " : "\n").trim();
+}
 
 // 1. Nothing from private/ is publishable.
 for (const f of files) if (f.startsWith("private/")) fail(`${f}: private/ must stay gitignored`);
@@ -42,12 +57,21 @@ for (const s of skills) {
     fail(`${s.file}: missing YAML frontmatter`);
     continue;
   }
-  const name = m[1].match(/^name:\s*(.+)$/m)?.[1].trim();
-  const description = m[1].match(/^description:\s*(.+)$/m)?.[1].trim();
+  const name = yamlScalar(m[1], "name");
+  const description = yamlScalar(m[1], "description");
   if (name !== s.name) fail(`${s.file}: frontmatter name "${name}" must equal folder name "${s.name}"`);
   if (!description) fail(`${s.file}: missing description`);
   else if (description.length > 1024) fail(`${s.file}: description is ${description.length} chars, limit 1024`);
-  if (!files.includes(`${s.dir}/agents/openai.yaml`)) fail(`${s.dir}: missing agents/openai.yaml`);
+
+  const yamlPath = `${s.dir}/agents/openai.yaml`;
+  if (!files.includes(yamlPath)) {
+    fail(`${s.dir}: missing agents/openai.yaml`);
+    continue;
+  }
+  const yaml = read(yamlPath);
+  if (!/^interface:\s*$/m.test(yaml)) fail(`${yamlPath}: missing interface block`);
+  for (const key of ["display_name", "short_description"])
+    if (!new RegExp(`^\\s+${key}:\\s*\\S`, "m").test(yaml)) fail(`${yamlPath}: missing interface.${key}`);
 }
 
 // 3. Promoted skills appear in the plugin, both READMEs and the docs tree; nothing else does.
@@ -60,10 +84,11 @@ if (JSON.stringify(want) !== JSON.stringify(have))
 
 const readme = read("README.md");
 for (const s of promoted) {
-  if (!readme.includes(`(./${s.dir}/SKILL.md)`)) fail(`README.md: no link to ./${s.dir}/SKILL.md`);
+  if (!readme.includes(`[${s.name}](./${s.dir}/SKILL.md)`)) fail(`README.md: no [${s.name}](./${s.dir}/SKILL.md) link`);
   const bucketReadme = `skills/${s.bucket}/README.md`;
   if (!files.includes(bucketReadme)) fail(`${bucketReadme}: missing`);
-  else if (!read(bucketReadme).includes(`(./${s.name}/SKILL.md)`)) fail(`${bucketReadme}: no link to ./${s.name}/SKILL.md`);
+  else if (!read(bucketReadme).includes(`[${s.name}](./${s.name}/SKILL.md)`))
+    fail(`${bucketReadme}: no [${s.name}](./${s.name}/SKILL.md) link`);
   if (!files.includes(`docs/${s.bucket}/${s.name}.md`)) fail(`docs/${s.bucket}/${s.name}.md: missing docs page`);
 }
 for (const f of files.filter((f) => f.startsWith("docs/") && f.endsWith(".md"))) {
@@ -75,17 +100,27 @@ for (const f of files.filter((f) => f.startsWith("docs/") && f.endsWith(".md")))
 const pkg = JSON.parse(read("package.json"));
 if (plugin.version !== pkg.version) fail(`plugin.json version ${plugin.version} != package.json ${pkg.version}`);
 
-// 5. Prose rules and links, over every text file.
-const text = files.filter((f) => /\.(md|json|ya?ml|mjs|sh)$/.test(f) && f !== "package-lock.json");
-for (const f of text) {
-  const body = read(f);
+// 5. Prose rules over every text file, links over Markdown.
+for (const f of files) {
+  if (f === "package-lock.json") continue;
+  const raw = readFileSync(join(repo, f));
+  if (raw.includes(0)) continue; // binary
+  // Code spans and fences hold data (a blacklist entry, a regex), not prose.
+  const body = raw
+    .toString("utf8")
+    .replace(/```[\s\S]*?```/g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(/`[^`\n]*`/g, (m) => " ".repeat(m.length));
   body.split("\n").forEach((line, i) => {
     if (line.includes(EM_DASH)) fail(`${f}:${i + 1}: em dash; rewrite the sentence`);
   });
   if (!f.endsWith(".md")) continue;
-  for (const [, target] of body.matchAll(/\]\(([^)\s]+)\)/g)) {
+  const targets = [
+    ...[...body.matchAll(/\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g)].map((m) => m[1]),
+    ...[...body.matchAll(/^\s*\[[^\]]+\]:\s*<?(\S+?)>?(?:\s+"[^"]*")?\s*$/gm)].map((m) => m[1]),
+  ];
+  for (const target of targets) {
     if (/^(https?:|mailto:|#)/.test(target)) continue;
-    const path = resolve(repo, dirname(f), target.split("#")[0]);
+    const path = resolve(repo, dirname(f), decodeURIComponent(target.split("#")[0]));
     if (!existsSync(path)) fail(`${f}: broken link ${target}`);
   }
 }
@@ -95,4 +130,4 @@ if (errors.length) {
   console.error(`\n${errors.length} problem(s).`);
   process.exit(1);
 }
-console.log(`ok: ${skills.length} skill(s), ${promoted.length} promoted, ${text.length} text files checked`);
+console.log(`ok: ${skills.length} skill(s), ${promoted.length} promoted, ${files.length} files checked`);

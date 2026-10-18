@@ -29,7 +29,7 @@ Precedence when two rules conflict: <rule A> wins over <rule B>.
 
 ## Sandbox
 
-Judge and fixer never: <touch the user's running app, real data dirs, other repos, the pointer, push, post>.
+Judge and fixer never: <touch the user's running app, real data dirs, other repos, the pointer, post anywhere>. The judge never pushes; the fixer pushes only if the ship path says so.
 Judge may run: <test, lint, build commands; the app only as <isolated instance, demo profile>>.
 PASS path uses no public network and no timing assertion tighter than <N ms>.
 Max parallel test workers while judges run: <N>.
@@ -42,7 +42,7 @@ Judge noise: <spread measured on an unchanged candidate, or "not measured, bar i
 
 ## Ship path
 
-<commit, changeset, push, release PR, install>. Verified fixes ship as they land.
+<how far a fix goes without asking: commit only | commit and push | release PR>. Verified fixes ship as they land.
 ```
 
 `.judge/rounds.md` gets one block per round:

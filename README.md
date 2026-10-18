@@ -4,19 +4,22 @@
 
 Agent skills I run on my own projects every week. They work in Claude Code, Codex, and any agent that reads `SKILL.md`.
 
-The first one is a gate. Coding agents stop when they think they're done, and "keep going until it's perfect" turns into a loop that never ends or a loop that ends on a guess. `standing-judge` puts a fresh, read-only judge between the agent and "done". Each round the judge scores a frozen commit and lists findings. The agent fixes them and proves the fixes. Then the agent rules whether development continues.
+There are two so far. The first is a gate. Coding agents stop when they think they're done, and "keep going until it's perfect" turns into a loop that never ends or a loop that ends on a guess. `standing-judge` puts a fresh, read-only judge between the agent and "done". Each round the judge scores a frozen commit and lists findings. The agent fixes them and proves the fixes. Then the agent rules whether development continues.
+
+The second, `deai`, revises Chinese or English prose that reads like an AI wrote it. It locks every fact, citation and hedge before touching a sentence, and checks the result with local detectors and two independent judges.
 
 ## Install
 
-The plugin updates itself. skills.sh copies editable files that you update by hand. Pick one, because installing both gives you every skill twice.
+Pick one route per agent. Installing the plugin and the skills.sh copy together gives you every skill twice.
 
 <details open>
 <summary><strong>Claude Code</strong></summary>
 
 ```bash
-claude plugin marketplace add Fanzzzd/skills
-claude plugin install fanzzzd-skills@fanzzzd
+claude plugin install fanzzzd-skills --marketplace Fanzzzd/skills
 ```
+
+Needs Claude Code 2.1.292 or later; on older versions run `claude plugin marketplace add Fanzzzd/skills` first, then `claude plugin install fanzzzd-skills@fanzzzd`. Third-party marketplaces don't auto-update by default: turn it on in `/plugin`, **Marketplaces**, `fanzzzd`, **Enable auto-update**, or update by hand with `claude plugin update fanzzzd-skills@fanzzzd`.
 
 </details>
 
@@ -28,16 +31,18 @@ codex plugin marketplace add Fanzzzd/skills
 codex plugin add fanzzzd-skills@fanzzzd
 ```
 
+To update, run `codex plugin marketplace upgrade fanzzzd`.
+
 </details>
 
 <details>
-<summary><strong>Any other agent, or editable files</strong> (manual updates)</summary>
+<summary><strong>Any other agent, or editable files</strong></summary>
 
 ```bash
 npx skills@latest add Fanzzzd/skills
 ```
 
-To update, run `npx skills@latest update`.
+This copies the files into your project, so you can edit them. To update, run `npx skills@latest update`.
 
 </details>
 
@@ -46,6 +51,10 @@ To update, run `npx skills@latest update`.
 ### Engineering
 
 - **[standing-judge](./skills/engineering/standing-judge/SKILL.md)**: Run a gate loop where a fresh read-only judge scores the work every round and rules whether development continues, until the bar passes, a plateau or budget stops it, or only owner decisions remain. [Docs](./docs/engineering/standing-judge.md).
+
+### Productivity
+
+- **[deai](./skills/productivity/deai/SKILL.md)**: Make Chinese or English prose (theses, reports, articles, cover letters) read like a domain author wrote it, without losing facts, citations, hedges or terms. A rule scanner, local AIGC detectors routed by language, and a two-judge revision loop. The skill body is in Chinese. [Docs](./docs/productivity/deai.md).
 
 ## How `standing-judge` works
 

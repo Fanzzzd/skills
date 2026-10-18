@@ -11,13 +11,13 @@ Agent skills, one folder per skill, organized into buckets under `skills/`:
 
 ## Invariants
 
-`npm run check` (`scripts/check.mjs`) enforces every rule in this list, and CI runs it on every push and pull request. Fix what it reports; never weaken the check to pass.
+`npm run check` (`scripts/check.mjs`) enforces every rule in this list, and CI runs it on every push to `main` and every pull request. Fix what it reports; never weaken the check to pass.
 
 - A skill folder's name equals the `name` in its `SKILL.md` frontmatter. The `description` stays under 1024 characters.
 - Every skill has `agents/openai.yaml` beside `SKILL.md` with Codex picker metadata (`interface.display_name`, `interface.short_description`).
 - The promoted set equals `.claude-plugin/plugin.json`'s `skills` array, exactly. Each promoted skill is linked from the top-level `README.md` and its bucket `README.md`, and has a docs page at `docs/<bucket>/<name>.md`. No other skill has a docs page.
 - `.claude-plugin/plugin.json`'s `version` equals `package.json`'s. Only `npm run version` changes either.
-- No em dashes anywhere. Rewrite the sentence with a period, comma, colon or parentheses; never substitute a character blindly.
+- No em dashes in prose. Rewrite the sentence with a period, comma, colon or parentheses; never substitute a character blindly. A dash quoted as data (a blacklist entry, a regex) goes in a code span, which the check skips.
 - Every relative link resolves.
 
 Run `claude plugin validate . --strict` after touching either manifest.
