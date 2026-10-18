@@ -92,7 +92,7 @@ def detect_lang(text: str) -> str:
     prose_check.is_chinese applies the same rule to its body paragraphs."""
     prose = re.sub(r"```.*?```", " ", text, flags=re.S)
     # Body lines only, like prose_check.paragraphs(): no headings, tables, quotes, captions, notes.
-    prose = "\n".join(l for l in prose.splitlines() if not SKIP_LINE.match(l) and not l.lstrip().startswith(">"))
+    prose = "\n".join(l for l in prose.splitlines() if not SKIP_LINE.match(l))
     prose = re.sub(r"`[^`\n]*`|https?://\S+", " ", prose)
     cjk = len(re.findall(r"[\u4e00-\u9fff]", prose))
     words = len(re.findall(r"[A-Za-z]+", prose))
@@ -124,7 +124,7 @@ LM_SIZES = {
 # ---------------------------------------------------------------- text preprocessing
 
 SKIP_LINE = re.compile(
-    r"^\s*(!\[|\||#|```|<!--|-->|>?\s*(资料来源|数据来源|来源|注)[：:]|(表|图)\s*[0-9A-Z]+[-－.．][0-9]+\s+\S[^。]{0,60}$)"
+    r"^\s*(!\[|\||#|```|<!--|-->|>|\s*(资料来源|数据来源|来源|注)[：:]|(表|图)\s*[0-9A-Z]+[-－.．][0-9]+\s+\S[^。]{0,60}$)"
 )
 
 

@@ -57,4 +57,6 @@ Fixed: <one clause per finding>
 Tests: <suite pass counts, flakes named>
 Verdict: <BUDGET | PASS | PANEL | OWNER | PLATEAU | REWRITE | CONTINUE>
 Follow-ups (below the bar's severity, after the bar passed): <list, or none>
+Panel (from the first PANEL round on; the lens set never changes):
+- <lens>: clean at <SHA> | open at <SHA>, reviewed <globs | whole build>, model <model>
 ```

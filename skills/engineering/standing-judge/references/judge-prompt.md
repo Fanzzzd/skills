@@ -25,4 +25,4 @@ Output, in this order:
 
 Round 1 has no previous scores or SHA range: ask for a baseline across all dimensions and a full sweep.
 
-For a panel round, send the same prompt to each judge with one extra line: "Your lens: <lens>. Score only the dimensions under it, and add any dimension the lens needs that the gate file lacks."
+For a panel round, send the same prompt to each judge with two extra lines: "Your lens: <lens>. Score only the dimensions under it, and add any dimension the lens needs that the gate file lacks." and "End with `Reviewed:` listing the paths or globs you examined, or `whole build` if you judged the running product."

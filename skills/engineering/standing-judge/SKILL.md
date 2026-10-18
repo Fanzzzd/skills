@@ -63,7 +63,9 @@ When fixes oscillate (one rule's fix trips another), the rubric conflicts with i
 
 One judge's 10 covers only the dimensions it was given. The panel is three to five judges in parallel on the same SHA, each with a lens the fixer did not pick (release and CI, accessibility, newcomer onboarding, security), on a different model where possible. Panel findings count against the bar at their own severity.
 
-A lens is **clean** on a SHA when it found nothing at or above the bar's severity there. A clean result holds on a later SHA when the diff since touches nothing that lens reviewed; a fix to the area a lens reviewed voids its clean result. So after a panel finding is fixed, the next round runs the lens that found it plus every lens whose area the fix touched, and the rest stay clean. The first PANEL round runs every lens.
+The first PANEL round fixes the lens set; record it in `.judge/rounds.md` and keep it until the loop ends. Each lens ends its report with `Reviewed:`, the paths or globs it examined, or `whole build` for a black-box lens. The judge declares its area, so the fixer never decides which lenses a fix affects.
+
+A lens is **clean** on a SHA when it found nothing at or above the bar's severity there. Its clean result holds on a later SHA while `git diff --name-only <clean SHA>..<current SHA>` matches none of its `Reviewed:` globs; `whole build` matches any change to shipped files. So after a panel finding is fixed, the next round runs every lens whose clean result no longer holds, which always includes the lens that found it.
 
 ## Calibration
 

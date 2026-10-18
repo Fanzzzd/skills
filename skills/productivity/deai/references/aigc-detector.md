@@ -29,7 +29,7 @@ $S/scripts/aigc FILE.md --all-paragraphs        # 打印每段分数
 $S/scripts/aigc FILE.md > out/aigc-r3.txt        # 给 judge 读
 ```
 
-预处理：删 Markdown 标题、表格、图片行、表题图题、"资料来源：""注："行、HTML 注释、代码块、〔REF:…〕和 [n] 引文标记；按空行分段；短于 40 字的段落跳过；超过 512 token 的段落按句切块，按长度加权平均。
+预处理：删 Markdown 标题、表格、图片行、表题图题、引用块、"资料来源：""注："行、HTML 注释、代码块、〔REF:…〕和 [n] 引文标记；按空行分段；短于 40 字的段落跳过；超过 512 token 的段落按句切块，按长度加权平均。
 
 ## 检测器
 

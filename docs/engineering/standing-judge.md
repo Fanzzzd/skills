@@ -24,8 +24,8 @@ For a single review of one diff, use a code review skill instead. This skill is 
 Every round ends on exactly one verdict, and the report leads with it. The loop has two phases: while the bar is unmet it fixes everything it verifies; once the bar passes it fixes only what blocks the bar, and a panel confirms the result.
 
 - **BUDGET**: the round or time budget is spent. The cap is hard, even when only the panel was left.
-- **PASS**: the bar holds, and a panel of judges with lenses the agent didn't pick found nothing at or above the bar's severity on the final commit.
-- **PANEL**: the bar just passed, so the next round is the panel.
+- **PASS**: the bar holds, and every judge on a panel with lenses the agent didn't pick is clean: it found nothing at or above the bar's severity on the final commit, or on an earlier one whose changes since don't touch the files that judge says it reviewed.
+- **PANEL**: the bar holds, but some panel lens still needs a clean result. The first time, every lens runs; after a fix, only the lenses whose reviewed files changed.
 - **OWNER**: what blocks the bar needs your decision or outside evidence (real credentials, a human sign-off).
 - **PLATEAU**: two rounds in a row with the bar unmet, no score moving, and no new finding at or above the bar's severity. More rounds of the same approach won't get there. An open-ended goal like "as fast as possible" ends here, at the limit: two rejected candidates in a row.
 - **REWRITE**: one area keeps regressing, so the agent rewrites it to a stated rule instead of patching it again.
