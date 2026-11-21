@@ -1,67 +1,67 @@
 ## What it does
 
-`standing-judge` runs a gate over your project. Each round a fresh, read-only judge subagent clones a frozen commit, gathers its own evidence, scores the work and lists findings. The main agent checks each finding, fixes it, proves the fix with tests, ships it, and calls the next judge. After every round the agent issues a verdict: continue, or stop with a reason.
+`standing-judge` runs a maker-checker gate over your project. Each round, a fresh read-only judge clones a frozen commit, gathers its own evidence, scores the work, and lists findings. You (or delegated fixer subagents) verify each finding, fix it, prove the fix with tests, ship on the approved path, and issue one verdict: continue, or stop with a concrete reason.
 
-The judge never fixes and never remembers. A judge that edits grades its own work, and a judge that remembers its last verdict defends it. A new judge each round, told only the last scores and what changed, finds what the previous one missed.
+The judge never edits and never remembers prior rounds. A judge that edits grades its own code, and a judge that remembers its last verdict defends it. A fresh judge each round finds what the previous one missed, while hard circuit breakers prevent infinite polish loops.
 
 ## When to reach for it
 
-Type `/standing-judge`, or the agent reaches for it when you ask for an agent as a gate, judge or reviewer that decides when to stop, or when you ask it to keep going "until it's perfect", "until full marks", "to the limit", or "until it beats X".
+Type `/standing-judge`, or let the agent invoke it when you want a judge that decides when to stop, when you ask to keep going "until full marks" or "to the limit", when matching a named product, or when checking whether a project is worth developing further.
 
-| You want | Gate kind |
+| You want | Primary kind |
 |---|---|
-| A repo that is reliable, documented and ready to share | Code |
-| To match or beat a named product | Parity |
-| A flow that makes sense to the people who use it | UX (black-box persona) |
-| Faster, to the limit | Performance (interleaved A/B with a noise floor) |
-| A document good enough to submit | Prose |
-| A result that holds up | Research (judge picks the benchmark) |
+| A reliable, launch-ready repo or library | Code |
+| To match or beat a named product or repo | Parity |
+| A user flow and interface that make sense | UX (black-box persona + Round 1 visual check) |
+| Faster, lighter, or "to the limit" | Performance (interleaved A/B with noise floor) |
+| A document, thesis, or letter ready to submit | Prose |
+| A benchmarked research result that holds up | Research (judge picks or audits benchmark) |
+| To check whether a product has real-world pull | Adoption (external users or revenue) |
 
-For a single review of one diff, use a code review skill instead. This skill is for loops that run until a bar is met.
+Gates can combine a primary kind with modifiers (such as `code + parity-matrix` or `UX + perf-budget`). For a single review of one diff, use a code review skill instead.
 
 ## The verdict
 
-Every round ends on exactly one verdict, and the report leads with it. The loop has two phases: while the bar is unmet it fixes everything it verifies; once the bar passes it fixes only what blocks the bar, and a panel confirms the result.
+Every round ends on exactly one verdict, and the report leads with it. The loop runs in two phases: Phase 1 clears blockers; Phase 2 locks out low-severity edits and confirms the final SHA through a cross-model panel.
 
-- **BUDGET**: the round or time budget is spent. The cap is hard, even when only the panel was left.
-- **PASS**: the bar holds, and every judge on a panel with lenses the agent didn't pick is clean: it found nothing at or above the bar's severity on the final commit, or on an earlier one whose changes since don't touch the files that judge says it reviewed.
-- **PANEL**: the bar holds, but some panel lens still needs a clean result. The first time, every lens runs; after a fix, only the lenses whose reviewed files changed.
-- **OWNER**: what blocks the bar needs your decision or outside evidence (real credentials, a human sign-off).
-- **PLATEAU**: two rounds in a row with the bar unmet, no score moving, and no new finding at or above the bar's severity. More rounds of the same approach won't get there. An open-ended goal like "as fast as possible" ends here, at the limit: two rejected candidates in a row.
-- **REWRITE**: one area keeps regressing, so the agent rewrites it to a stated rule instead of patching it again.
-- **CONTINUE**: something code can fix still blocks the bar.
+- **BUDGET**: the current epoch (default 6 rounds) or total budget is spent. Even when asked for "unlimited" runs, the loop pauses at each epoch boundary with a convergence delta report and asks before continuing.
+- **ADOPTION**: Round 1 on a personal product with `Adoption: none` cleared launch-blocking defects. Ship to real users and record external feedback or payment in `.judge/gate.md` before opening a full gate.
+- **PASS**: the bar holds on the current SHA, and every panel lens has a valid clean result on it.
+- **PANEL**: the bar holds on the current SHA, and one or more panel lenses still need verification.
+- **OWNER**: every remaining blocker is an owner item (credentials, signing, product decision, external proof).
+- **PLATEAU**: the circuit breaker fired. Two consecutive bar-unmet rounds showed no net drop in open blocking findings, a `REWRITE` target still had a blocking finding on the next round, or an open-ended performance goal produced two rejected candidates in a row.
+- **REWRITE**: the same area or rule produced blocking findings two rounds in a row (first time only). The fixer consolidates the rule behind one owning module and lets the next judge attack it.
+- **CONTINUE**: code can fix a remaining blocker.
 
-Findings below the bar's severity that turn up after the bar passes go on a follow-up list in the final report instead of reopening the loop.
+## The gate file and ledger
 
-This is the answer to "should we keep developing this?" A gate that only ever says "continue" or "perfect" is not doing its job.
+Before Round 1, the agent writes `.judge/gate.md` (excluded from git): the primary kind and modifiers, binary bar, bounded heuristics (so regex or shell matchers do not loop forever on exotic fuzzing), owner items, adoption status, sandbox and exclusive resource locks, epoch budget, ship path, and approved judge models. It shows you the summary before starting (headless runs mark every report `gate unconfirmed`).
 
-## The gate file
-
-Before round 1 the agent writes `.judge/gate.md` (excluded from git): the bar, the dimensions, your owner decisions, what the loop may never touch on your machine, a budget, the stop rules, and how far a fix may ship without asking. It shows you the bar, owner items, budget and ship path before round 1. In a headless run that can't ask, it proceeds and marks every report "gate unconfirmed" until you confirm. After that the bar is frozen. Thresholds don't move to let the work pass. Each round is logged in `.judge/rounds.md`, so a judge that dies or a new session picks up where the loop left off.
+Round history stays split in two: `.judge/rounds.md` holds a compact ledger (max 8 lines per round) so any resumed session reads the whole arc in seconds, while full judge reports live in `.judge/reports/` instead of volatile `/tmp`.
 
 ## Common questions
 
-**Why did it stop before everything was 10?**
-Read the verdict. OWNER and PLATEAU are real answers: the remaining gap needs you, or needs a different approach. Loops run without a plateau rule went 24 to 39 rounds without converging.
+**Why does it pause every 6 rounds even if I say "unlimited budget"?**
+Unbounded runs without checkpoints drift in scope and burn compute long after diminishing returns set in. Epoch pauses give you a convergence delta ("blockers went 9 -> 3 -> 2") so you decide whether another 6 rounds are worth running.
 
-**The judge said something wrong. Does the agent fix it anyway?**
-No. The agent reproduces each finding first. Judges make confident wrong claims, and the agent fixes what is really there and tells the next judge.
+**Why did it stop after Round 1 on my personal product?**
+Without external users or revenue, later rounds polish guesses instead of product-market fit. Once real external user feedback or first payment is recorded in `.judge/gate.md`, a full multi-round gate unlocks.
 
-**It reached all 10s. Is it done?**
-Not until a panel round passes. One judge's 10 only covers the dimensions it was given. In one run, a project at all 10s from a single judge scored 3 out of 10 on open-source readiness from the first panel judge given that lens.
+**Why does Phase 2 forbid fixing low findings?**
+Fixing a `low` finding or tweaking unrelated docs during `PANEL` voids already-clean lenses and forces full panel re-runs. Phase 2 fixes only blocking findings, and re-run lenses perform targeted re-verification instead of opening new fuzz axes.
 
-**Will it touch my running app or real data?**
-The gate file lists what both roles may never touch, and the fixer's test runs obey it too. Fill that section in honestly. An end-to-end suite that quits your app is a sandbox violation, not a test.
+**Why does the panel want a different model family?**
+Same-family judges share blind spots and frequently over-score their own family's drafts. Including a second approved model family in `PANEL` catches issues single-family self-judging misses. If only one family is approved, reports mark `single-family-judge`.
 
-**Can I use a different model as the judge?**
-Yes, and the skill alternates the judge's model between rounds when the harness offers more than one. One model shares one set of blind spots.
+**Why does a UX gate pause after Round 1 for my review?**
+LLM UX judges are strong at catching broken flows and state bugs, but weak at visual hierarchy, aesthetics, and motion feel. Confirming screenshots after Round 1 stops autonomous loops from polishing an unattractive layout to a 10/10 score.
 
-**Does it cost a lot?**
-Each round is one or more full subagent runs. Set the budget in the gate file. A gate with 190 scripted criteria and four red teams per round was stopped by its owner for token cost after five rounds.
+**Will parallel judges fill my disk or fight over displays?**
+The gate file sets a 10 GiB disk floor, caps heavy parallel workers at 2, requires exclusive locks for displays/browsers/ports, and deletes each `/tmp` clone as soon as its report is saved in `.judge/reports/`.
 
 ## It's working if
 
-- Every report starts with a verdict word, not a vibe.
-- Scores and criteria are tied to a commit SHA you can check out.
-- Findings come with how the judge observed them: a command it ran, a screen it drove, a line it quoted from the reference.
-- The loop stops on its own, and the stop names what is left and who can close it.
+- Every report leads with one verdict word and an open-blocker delta, not a vibe.
+- Scores and criteria tie to a frozen commit SHA verified from a clean clone.
+- Findings cite direct evidence: a command run, a screen driven, or a reference line quoted side-by-side.
+- The loop stops cleanly on `PASS`, `ADOPTION`, `OWNER`, `PLATEAU`, or an epoch `BUDGET` without burning 20+ idle rounds.

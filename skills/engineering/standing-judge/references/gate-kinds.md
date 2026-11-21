@@ -1,54 +1,64 @@
-# Gate kinds
+# Gate kinds and modifiers
 
-Pick one kind per gate. Each sets what the judge must look at and how the bar is phrased. Copy the chosen kind's rules into the gate file's Evidence section.
+Pick one **Primary kind** and any needed **Modifiers**. Copy the selected rules into `.judge/gate.md`'s `Evidence` section so every judge reads them directly.
 
-| The user wants | Kind |
+| The user wants | Primary kind |
 |---|---|
-| The repo polished, reliable, launch-ready | [Code](#code) |
+| A reliable, launch-ready repo or library | [Code](#code) |
 | To match or beat a named product or repo | [Parity](#parity) |
-| A flow that makes sense to the people who use it | [UX](#ux) |
-| Faster, lighter, "to the limit" | [Performance](#performance) |
-| A document, thesis or letter good enough to submit | [Prose](#prose) |
-| A result that holds up | [Research](#research) |
+| A user flow and interface that make sense | [UX](#ux) |
+| Faster, lighter, or "to the limit" | [Performance](#performance) |
+| A document, thesis, or letter ready to submit | [Prose](#prose) |
+| A benchmarked research result that holds up | [Research](#research) |
+| To test whether a product has real-world pull | [Adoption](#adoption) |
+
+Common hybrid modifiers: `parity-matrix`, `perf-budget`, `ux-checkpoint`, `release-hygiene`.
 
 ## Code
 
-- Default dimensions: ergonomics, reliability, speed, onboarding, polish, docs, shareability. Swap in the project's own where they fit better (API design for a library, accessibility for a site). Keep the set fixed across rounds so scores compare.
-- The judge reads the code, runs the test suite and linters, and runs the product in the sandbox when a finding depends on behaviour. A fix that reads right can do nothing at runtime.
-- Release hygiene is in scope: CI green on the frozen SHA, changelog entries for shipped fixes, no round labels in code comments.
+- Default dimensions: ergonomics, reliability, speed, onboarding, polish, docs, shareability (swap project-specific ones before Round 1 and freeze them).
+- Judge reads code, runs tests and linters, and exercises the built product in the sandbox whenever a finding depends on runtime behavior.
+- Release hygiene is in scope: CI green on the frozen SHA, changelog entries for shipped fixes, no round labels in code comments or test titles.
+- If the repo includes heuristic matchers (shell approval, regex filters, static scanners), declare a `Bounded heuristics` corpus in `.judge/gate.md` before Round 1.
 
 ## Parity
 
-- Pin the reference: a repo at a commit, a product at a dated version. The judge studies the reference itself; a summary written by the fixer carries the fixer's blind spots.
-- Turn "beat X" into a feature matrix before round 1: one row per capability the reference has, each with how to observe it in both. The bar is rows passed plus a severity threshold.
-- Every score quotes both sides: reference `file:line` or screenshot beside ours. A dimension with no side-by-side evidence scores 1.
-- Gaps that need outside evidence the agent cannot produce (real credentials, a provider key, a human acceptance record) are owner items. They keep the gate from PASS honestly; the verdict is OWNER, not CONTINUE.
+- Pin the reference to an exact commit SHA or dated product version. The judge inspects the reference directly; never feed a fixer-written summary as the sole source.
+- Build a feature matrix before Round 1: one row per capability with how to observe both sides. Bar = rows passed plus severity threshold.
+- Every finding quotes both sides (`file:line` or screenshot). Unbacked parity claims score 1 on that dimension.
+- Gaps requiring real external credentials, paid tenants, or human acceptance are `Owner items` and end on `OWNER`, not `CONTINUE`.
 
 ## UX
 
-- Black-box persona: the judge plays a named user of the product (role, goal, what they know), is barred from code, docs and git, and uses only the running product.
-- Write 4 to 8 tasks the persona must complete and binary criteria per task ("finds why this plan was chosen without help"). The judge takes a screenshot of every screen it judges, at the widths the users use.
-- The judge drives the product itself. Screenshots the fixer chose show only what the fixer chose.
-- A wholesale new visual direction is an owner item: show the user two or three mockups and let them pick.
+- Black-box persona: judge plays a named user (role, goal, prior knowledge), stays out of source code/docs/git, and drives the running product itself.
+- Write 4 to 8 concrete persona tasks with binary pass criteria. Judge captures its own screenshots at target viewport widths; fixer-selected screenshots do not count.
+- **Round 1 human visual checkpoint:** LLM judges catch state-machine and flow bugs reliably, but miss visual taste, layout balance, and motion feel. After Round 1 fixes layout or visual changes, pause and send 2 to 3 real screenshots (or a local preview link) to the user for visual/direction sign-off before running autonomous polish rounds.
+- A wholesale visual redesign is always an owner item: show 2 to 3 mockups and let the user pick.
 
 ## Performance
 
-- Fix the benchmark first: workload, metric, build flags, machine. Run it from a clean build of each SHA, on an isolated instance of the app.
-- Measure the noise floor from two baseline runs. Run A/B/A/B interleaved. A metric is IMPROVED only when both candidate runs beat both baseline runs by more than the noise; REGRESSED the mirror case; otherwise unchanged.
-- Check that the measurement does not perturb the system: a synchronous stats call on the hot path can turn hundreds of requests per second into a dozen.
-- A candidate is ACCEPTED when the target metric IMPROVED and nothing user-facing REGRESSED, and becomes the new baseline; otherwise it is REJECTED and reverted. ACCEPTED is a round result, not the PASS verdict.
-- A fixed target ("p95 under 120 ms") is a bar like any other: a candidate that meets it reaches PANEL, then PASS. "As fast as possible" or "to the limit" has no PASS. Its plateau is two REJECTED candidates in a row; it ends there, or on BUDGET.
-- Keep baselines and the noise floor in `.judge/rounds.md`, so a judge that dies mid-baseline is replaced without starting over.
+- Fix the benchmark before Round 1: exact workload, metric, build flags, and machine conditions. Run from a clean build on an isolated instance with no competing heavy jobs.
+- Measure the noise floor from two identical baseline runs. Run candidate comparisons interleaved (`A/B/A/B`). A metric is `IMPROVED` only when both candidate runs beat both baseline runs by more than the noise floor; `REGRESSED` in the mirror case; otherwise unchanged.
+- Verify measurement instrumentation does not perturb the hot path.
+- `ACCEPTED` (target improved, no user-facing regression) updates the baseline and continues; `REJECTED` reverts. A fixed target ("p95 < 120 ms") moves to `PANEL` then `PASS`; an open-ended goal ("to the limit") never hits `PASS` and stops on `PLATEAU` (2 consecutive `REJECTED` candidates) or `BUDGET`.
+- Record baselines and noise floor in `.judge/rounds.md` so crashed runs resume without re-baselining.
 
 ## Prose
 
-- The judge compares against the source text for faithfulness: facts, citations, qualifiers and terms survive every round.
-- Mechanical metrics (pattern hits, detector scores) are noisy. Measure their spread on an unchanged draft before treating any change as real.
-- Style rules conflict with clarity. Write the precedence down (logical connectives are not style faults) before the second round, or fixes oscillate.
-- For a dedicated de-AI workflow with detectors, call the Skill tool with "deai" if it is installed.
+- Compare every draft against source facts for faithfulness: numbers, citations, qualifiers, and domain terms must survive every round.
+- Measure spread of automated detectors or pattern scripts on an unchanged draft before treating score deltas as real.
+- State rule precedence before Round 2 (for example: factual precision and clarity win over compactness or style rules) so edits do not oscillate.
+- For dedicated de-AI detector workflows, call the Skill tool with `deai` if installed.
 
 ## Research
 
-- The fixer never grades its own benchmark. The judge picks a public standard benchmark where one exists, or audits the custom one for train/test leakage, difficulty and whether a trivial baseline already passes.
-- The bar names the baseline to beat and the margin, on held-out data.
-- The judge reruns the headline number from the committed code. A number that can't be rerun is not evidence.
+- The fixer never grades its own benchmark. Judge selects a public standard benchmark where one exists, or audits the custom benchmark for train/test leakage, difficulty, and trivial baselines before any score counts.
+- Bar names the baseline to beat, the margin, and held-out evaluation data.
+- Judge reruns the headline metric from the committed code. Numbers that cannot be rerun are not evidence.
+
+## Adoption
+
+- Use when the user asks whether a personal product deserves further investment.
+- Evidence comes strictly from outside the repo: non-author installs, active sessions, filed external issues, verbatim outside user feedback, or real payments. Self-dogfooding, synthetic personas, and internal tests do not count.
+- Bar criteria require observable external signals (for example: 3 external users completing the core flow unassisted, or first paid customer).
+- Missing external usage is an owner item, never a code finding. Judge verifies cited external proof and reports only launch-blocking defects; rounds end on `ADOPTION` or `OWNER`, never `CONTINUE`.

@@ -4,9 +4,9 @@
 
 Agent skills I run on my own projects every week. They work in Claude Code, Codex, and any agent that reads `SKILL.md`.
 
-There are two so far. The first is a gate. Coding agents stop when they think they're done, and "keep going until it's perfect" turns into a loop that never ends or a loop that ends on a guess. `standing-judge` puts a fresh, read-only judge between the agent and "done". Each round the judge scores a frozen commit and lists findings. The agent fixes them and proves the fixes. Then the agent rules whether development continues.
+There is one so far, a gate. Coding agents stop when they think they're done, and "keep going until it's perfect" turns into a loop that never ends or a loop that ends on a guess. `standing-judge` puts a fresh, read-only judge between the agent and "done". Each round the judge scores a frozen commit and lists findings. The agent verifies and fixes them, proves the fixes, and issues a verdict on whether development continues.
 
-The second, `deai`, revises Chinese or English prose that reads like an AI wrote it. It locks every fact, citation and hedge before touching a sentence, and checks the result with local detectors and two independent judges.
+`deai`, the de-AI prose skill that used to ship here, moved to its own repository on 2026-11-18, together with a `deai-setup` skill that installs its detectors.
 
 ## Install
 
@@ -50,11 +50,7 @@ This copies the files into your project, so you can edit them. To update, run `n
 
 ### Engineering
 
-- **[standing-judge](./skills/engineering/standing-judge/SKILL.md)**: Run a gate loop where a fresh read-only judge scores the work every round and rules whether development continues, until the bar passes, a plateau or budget stops it, or only owner decisions remain. [Docs](./docs/engineering/standing-judge.md).
-
-### Productivity
-
-- **[deai](./skills/productivity/deai/SKILL.md)**: Make Chinese or English prose (theses, reports, articles, cover letters) read like a domain author wrote it, without losing facts, citations, hedges or terms. A rule scanner, local AIGC detectors routed by language, and a two-judge revision loop. The skill body is in Chinese. [Docs](./docs/productivity/deai.md).
+- **[standing-judge](./skills/engineering/standing-judge/SKILL.md)**: Run a gate loop where a fresh read-only judge scores the work every round and rules whether development continues, until the bar passes, a plateau or epoch budget stops it, or only owner decisions remain. [Docs](./docs/engineering/standing-judge.md).
 
 ## How `standing-judge` works
 
@@ -66,15 +62,15 @@ gate file ──> freeze SHA ──> fresh judge (clean clone, own evidence)
           ship + log round <── prove <── verify each finding, fix
                                            │
                                       verdict:
-  BUDGET | PASS | PANEL | OWNER | PLATEAU | REWRITE | CONTINUE
+  BUDGET | ADOPTION | PASS | PANEL | OWNER | PLATEAU | REWRITE | CONTINUE
 ```
 
-- **The bar is binary and frozen.** "No finding of medium or higher" or "every P0 passes" decides PASS. Scores from 0 to 10 track progress beside it. Thresholds never move to let the work pass.
-- **The judge gathers its own evidence.** It runs the app, drives the flows, reruns the benchmark, and quotes the reference product side by side. A judge fed the fixer's screenshots sees only what the fixer picked.
-- **Six gate kinds:** code, parity with a named product, black-box UX persona, performance with a noise floor and interleaved A/B runs, prose, and research where the judge picks the benchmark.
-- **PASS needs a panel.** One judge's 10 covers only its dimensions, so before PASS a panel of judges with other lenses, on other models where possible, takes one more look.
+- **The bar is binary and frozen.** "No finding of medium or higher" or "every P0 passes" decides PASS. Scores from 0 to 10 track trend beside it. Thresholds never move to let the work pass.
+- **Working circuit breakers.** Runs cap at 6-round epochs even when asked for unlimited budgets, `PLATEAU` stops after two rounds with no net drop in open blockers (or a failed rewrite), and personal products with no external users stop at `ADOPTION` after clearing launch blockers.
+- **Composable gate kinds.** Pick a primary kind (code, parity, UX, performance, prose, research, adoption) plus modifiers (`parity-matrix`, `perf-budget`, `ux-checkpoint`, `release-hygiene`). UX gates pause after Round 1 for human visual sign-off.
+- **Two-mode cross-family panel.** Before `PASS`, parallel lenses check blind spots on a second approved model family when available. Phase 2 fixes blocking findings only, and invalidated lenses run targeted re-verification instead of opening new fuzz axes.
 
-Every rule comes from a loop that went wrong in a real session: a judge scoring GitHub stars against a repo, an end-to-end suite that quit the user's running app, a 39-round loop with no stop rule, a research agent grading itself on its own benchmark. The [docs page](./docs/engineering/standing-judge.md) covers when to reach for it and what a working loop looks like.
+Every rule comes from a loop that went wrong in a real session: a 30-round regex whack-a-mole panel loop, a 0-user personal app polished for 26 rounds, same-family judges giving 10/10 where another model found P0 errors, parallel clean clones draining disk to 0 GiB, and UX judges scoring ugly layouts 10/10. The [docs page](./docs/engineering/standing-judge.md) covers when to reach for it and what a working loop looks like.
 
 ## Contributing
 
