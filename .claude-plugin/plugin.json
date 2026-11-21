@@ -1,7 +1,7 @@
 {
   "name": "fanzzzd-skills",
   "version": "0.1.0",
-  "description": "Agent skills for running AI judge gates: a fresh read-only judge scores the work each round and decides whether development continues. Includes a de-AI prose skill with local detectors.",
+  "description": "Agent skills for running AI judge gates: a fresh read-only judge scores the work each round and decides whether development continues.",
   "author": {
     "name": "Zhendi Fan",
     "url": "https://github.com/Fanzzzd"
@@ -14,12 +14,9 @@
     "judge",
     "review",
     "quality-gate",
-    "agent-loop",
-    "de-ai",
-    "writing"
+    "agent-loop"
   ],
   "skills": [
-    "./skills/engineering/standing-judge",
-    "./skills/productivity/deai"
+    "./skills/engineering/standing-judge"
   ]
 }
