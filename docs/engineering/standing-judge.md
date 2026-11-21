@@ -25,11 +25,11 @@ Gates can combine a primary kind with modifiers (such as `code + parity-matrix` 
 Every round ends on exactly one verdict, and the report leads with it. The loop runs in two phases: Phase 1 clears blockers; Phase 2 locks out low-severity edits and confirms the final SHA through a cross-model panel.
 
 - **BUDGET**: the current epoch (default 6 rounds) or total budget is spent. Even when asked for "unlimited" runs, the loop pauses at each epoch boundary with a convergence delta report and asks before continuing.
-- **ADOPTION**: Round 1 on a personal product with `Adoption: none` cleared launch-blocking defects. Ship to real users and record external feedback or payment in `.judge/gate.md` before opening a full gate.
+- **ADOPTION**: at least one judged round is verified on the current SHA for a personal product with `Adoption: none`, and zero launch-blocking defects remain. Ship to real users and record external feedback or payment in `.judge/gate.md` before opening a full gate.
 - **PASS**: the bar holds on the current SHA, and every panel lens has a valid clean result on it.
 - **PANEL**: the bar holds on the current SHA, and one or more panel lenses still need verification.
 - **OWNER**: every remaining blocker is an owner item (credentials, signing, product decision, external proof).
-- **PLATEAU**: the circuit breaker fired. Two consecutive bar-unmet rounds showed no net drop in open blocking findings, a `REWRITE` target still had a blocking finding on the next round, or an open-ended performance goal produced two rejected candidates in a row.
+- **PLATEAU**: the circuit breaker fired. Two consecutive bar-unmet rounds showed neither a drop in open blocking findings nor a rise in passed binary criteria, a `REWRITE` target still had a blocking finding on the next round, or an open-ended performance goal produced two rejected candidates in a row.
 - **REWRITE**: the same area or rule produced blocking findings two rounds in a row (first time only). The fixer consolidates the rule behind one owning module and lets the next judge attack it.
 - **CONTINUE**: code can fix a remaining blocker.
 
